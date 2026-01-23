@@ -1,0 +1,24 @@
+:root {
+    --color-bg: #f8fafb;
+    --color-primary: #3282F6;
+    --color-accent: #7AC143;
+    --color-text: #0A0A0A;
+}
+
+.kioskRoot {
+    min-height: 100vh;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+html {
+    overflow: hidden;
+}
+
+body {
+    overflow: hidden;
+}

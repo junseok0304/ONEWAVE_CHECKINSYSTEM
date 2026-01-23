@@ -1,0 +1,55 @@
+.page {
+    min-height: 100vh;
+}
+
+.nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(29, 34, 68, 0.10);
+}
+
+.navInner {
+    max-width: var(--container);
+    margin: 0 auto;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.brand {
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+}
+
+.links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.link {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: rgba(0, 0, 0, 0.72);
+    padding: 10px 12px;
+    border-radius: 12px;
+    transition: 0.15s ease;
+}
+
+.link:hover {
+    background: rgba(50, 130, 246, 0.10);
+    color: #000;
+}
+
+.main {
+    max-width: var(--container);
+    margin: 0 auto;
+    padding: 26px 20px 48px 20px;
+}

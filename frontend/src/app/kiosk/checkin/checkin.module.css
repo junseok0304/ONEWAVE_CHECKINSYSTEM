@@ -1,0 +1,729 @@
+/* ============================================
+   CSS Variables - globals.css와 동기화
+   ============================================ */
+:root {
+  --color-primary: #3282f6;
+  --color-accent: #7AC143;
+  --color-text-primary: #0A0A0A;
+  --color-text-secondary: #4a4a4a;
+  --bg-light: #f5f7fa;
+  --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-medium: 0 10px 26px rgba(0, 0, 0, 0.12);
+  --shadow-heavy: 0 18px 40px rgba(50, 130, 246, 0.2);
+  --radius-default: 28px;
+  --radius-button: 18px;
+  --radius-small: 12px;
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.4s ease;
+  --text-black: #0A0A0A;
+  --text-dark: rgba(10, 10, 10, 0.85);
+  --text-medium: rgba(10, 10, 10, 0.65);
+  --text-light: rgba(10, 10, 10, 0.55);
+  --space-xs: 6px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 20px;
+  --space-xl: 26px;
+  --space-2xl: 48px;
+}
+
+/* ============================================
+   Container & Layout
+   ============================================ */
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+  background: #f8fafb;
+}
+
+.content {
+  width: 95%;
+  max-width: 1400px;
+  display: grid;
+  grid-template-columns: 1.2fr 2fr;
+  gap: clamp(48px, 8vw, 80px);
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* 좌측 텍스트 섹션 */
+.left {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.left {
+  background: linear-gradient(135deg, #ffffff 0%, rgba(122, 193, 67, 0.12) 100%);
+  border-right: 2px solid rgba(122, 193, 67, 0.15);
+  padding-left: clamp(20px, 4vw, 40px);
+  padding-right: clamp(20px, 3vw, 32px);
+  padding-top: clamp(24px, 5vw, 48px);
+  padding-bottom: clamp(24px, 5vw, 48px);
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.leftText {
+  font-size: clamp(48px, 4.5vw, 72px);
+  line-height: 1.08;
+  font-weight: 950;
+  letter-spacing: -0.06em;
+  color: var(--text-black);
+  gap: clamp(8px, 1.2vh, 14px);
+  display: flex;
+  flex-direction: column;
+  margin-bottom: clamp(12px, 1.5vh, 20px);
+  word-break: keep-all;
+}
+
+.leftLineBlack {
+  color: var(--text-black);
+  display: block;
+  word-break: keep-all;
+}
+
+.leftLineAccent {
+  color: var(--color-accent);
+  display: block;
+  word-break: keep-all;
+}
+
+.leftDesc {
+  font-size: clamp(14px, 1.6vh, 18px);
+  font-weight: 500;
+  color: var(--text-medium);
+  letter-spacing: -0.01em;
+  line-height: 1.6;
+}
+
+/* 우측 카드 섹션 */
+.right {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding-right: clamp(24px, 5vw, 48px);
+  padding-top: clamp(24px, 5vw, 48px);
+  padding-bottom: clamp(24px, 5vw, 48px);
+}
+
+.card {
+  width: min(500px, 100%);
+  background: #ffffff;
+  border-radius: var(--radius-default);
+  box-shadow: 0 18px 40px rgba(10, 10, 10, 0.12);
+  border: 1px solid rgba(122, 193, 67, 0.08);
+  padding: clamp(32px, 4vw, 42px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2vh, 24px);
+  align-items: stretch;
+}
+
+/* 체크인 페이지 특화 스타일 */
+
+/* ============================================
+   카드 높이 차등 처리
+   ============================================ */
+
+/* select 단계 기본 설정 */
+.cardSelect {
+    padding-bottom: 26px;
+}
+
+/* 후보 여러명일 때 (>= 3명) */
+.cardSelectTall {
+    min-height: clamp(420px, 54vh, 720px);
+}
+
+/* 후보 1-2명일 때 */
+.cardSelectCompact {
+    min-height: clamp(280px, 36vh, 420px);
+}
+
+/* ============================================
+   카드 내부 타이틀 & 서브텍스트
+   ============================================ */
+
+.cardTitle {
+    font-size: clamp(20px, 2.2vh, 28px);
+    font-weight: 950;
+    color: var(--color-accent);
+    letter-spacing: -0.03em;
+    margin-bottom: clamp(8px, 1.2vh, 14px);
+}
+
+.subTitle {
+    font-size: clamp(14px, 1.6vh, 18px);
+    font-weight: 600;
+    color: var(--text-medium);
+    letter-spacing: -0.01em;
+    margin-bottom: clamp(12px, 1.5vh, 18px);
+}
+
+/* ============================================
+   폼 & 입력 필드
+   ============================================ */
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 1.5vh, 20px);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 0;
+}
+
+.label {
+    font-size: clamp(13px, 1.4vh, 16px);
+    font-weight: 800;
+    color: var(--text-black);
+    letter-spacing: -0.01em;
+}
+
+.input {
+    width: 100%;
+    height: clamp(68px, 7vh, 84px);
+    border: 2px solid rgba(122, 193, 67, 0.6);
+    border-radius: 16px;
+    font-size: clamp(20px, 1.8vw, 28px);
+    font-weight: 950;
+    padding: 0 clamp(14px, 2vh, 18px);
+    text-align: center;
+    outline: none;
+    box-sizing: border-box;
+    transition: all var(--transition-normal);
+    color: var(--text-black);
+    letter-spacing: 4px;
+    background: #fafbfc;
+}
+
+.input:focus {
+    border-color: var(--color-accent);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(122, 193, 67, 0.15);
+}
+
+.input::placeholder {
+    color: rgba(10, 10, 10, 0.4);
+    letter-spacing: normal;
+}
+
+/* ============================================
+   에러 메시지
+   ============================================ */
+
+.errorBox {
+    width: 100%;
+    padding: clamp(12px, 1.5vh, 16px) clamp(14px, 2vh, 18px);
+    border-radius: 12px;
+    background: rgba(220, 53, 69, 0.12);
+    color: #dc3545;
+    font-size: clamp(13px, 1.3vh, 16px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+.errorSpacer {
+    height: 0;
+}
+
+/* ============================================
+   주요 버튼 (파란색)
+   ============================================ */
+
+.primaryBtn {
+    width: 100%;
+    height: clamp(74px, 8vh, 90px);
+    border: none;
+    border-radius: var(--radius-button);
+    cursor: pointer;
+    background: var(--color-accent);
+    color: #ffffff;
+    font-size: clamp(20px, 1.9vw, 26px);
+    font-weight: 950;
+    letter-spacing: -0.02em;
+    transition: all var(--transition-fast);
+    box-shadow: 0 12px 28px rgba(122, 193, 67, 0.28);
+}
+
+.primaryBtn:hover {
+    opacity: 0.88;
+    transform: translateY(-3px);
+    box-shadow: 0 16px 36px rgba(122, 193, 67, 0.38);
+}
+
+.primaryBtn:active {
+    transform: translateY(-1px);
+}
+
+.disabled {
+    background: #e8eef2 !important;
+    cursor: not-allowed !important;
+    opacity: 0.95 !important;
+    box-shadow: none !important;
+}
+
+/* ============================================
+   후보 리스트 스크롤 영역
+   ============================================ */
+
+.candidateScrollArea {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+    margin-top: clamp(4px, 0.5vh, 8px);
+    margin-bottom: 0;
+}
+
+/* 후보 1-2명 (compact) */
+.candidateScrollCompact {
+    max-height: clamp(100px, 13vh, 200px);
+    min-height: clamp(80px, 10vh, 160px);
+}
+
+/* 후보 3명 이상 (tall) */
+.candidateScrollTall {
+    max-height: clamp(280px, 35vh, 480px);
+    min-height: clamp(200px, 25vh, 360px);
+}
+
+.candidateScrollArea::-webkit-scrollbar {
+    width: 10px;
+}
+
+.candidateScrollArea::-webkit-scrollbar-thumb {
+    background: rgba(122, 193, 67, 0.35);
+    border-radius: 999px;
+}
+
+.candidateScrollArea::-webkit-scrollbar-track {
+    background: rgba(122, 193, 67, 0.08);
+    border-radius: 999px;
+}
+
+/* ============================================
+   후보 버튼 목록
+   ============================================ */
+
+.candidateList {
+    display: grid;
+    gap: clamp(10px, 1.2vh, 14px);
+}
+
+.candidateBtn {
+    width: 100%;
+    border: 2px solid rgba(122, 193, 67, 0.25);
+    background: #ffffff;
+    border-radius: 16px;
+    padding: clamp(16px, 2vh, 24px) clamp(12px, 1.5vh, 16px);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.candidateBtn:hover {
+    border-color: rgba(122, 193, 67, 0.5);
+    background: rgba(122, 193, 67, 0.06);
+    transform: translateX(4px);
+}
+
+.candidateBtn:active {
+    transform: translateX(2px);
+}
+
+.candidateDisabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.candidateDisabled:hover {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.1);
+    transform: none;
+}
+
+/* ============================================
+   후보 행 (이름 + 배지)
+   ============================================ */
+
+.candidateRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(8px, 1vh, 12px);
+    width: 100%;
+}
+
+.candidateName {
+    font-size: clamp(18px, 2vh, 28px);
+    font-weight: 950;
+    letter-spacing: -0.02em;
+    color: var(--text-black);
+    flex: 1;
+    text-align: left;
+}
+
+.badgeContainer {
+    display: flex;
+    gap: clamp(8px, 1vh, 12px);
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.discordBadge {
+    display: flex;
+    align-items: center;
+    gap: clamp(4px, 0.6vh, 6px);
+    padding: clamp(4px, 0.6vh, 6px) clamp(10px, 1.2vh, 14px);
+    background: rgba(88, 101, 242, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(88, 101, 242, 0.2);
+    white-space: nowrap;
+}
+
+.discordLogo {
+    font-size: clamp(10px, 1.2vh, 14px);
+}
+
+.discordStatus {
+    font-size: clamp(10px, 1.2vh, 12px);
+    font-weight: 950;
+    letter-spacing: 0.05em;
+}
+
+.discordStatus.approved {
+    color: #22c55e;
+}
+
+.discordStatus.pending {
+    color: #f59e0b;
+}
+
+.discordStatus.rejected {
+    color: #dc3545;
+}
+
+.staffBadge {
+    font-size: clamp(10px, 1.2vh, 12px);
+    font-weight: 950;
+    color: #ffffff;
+    background: var(--color-accent);
+    padding: clamp(4px, 0.6vh, 6px) clamp(10px, 1.2vh, 14px);
+    border-radius: 8px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.badge {
+    font-size: clamp(11px, 1.3vh, 13px);
+    font-weight: 900;
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.12);
+    padding: clamp(4px, 0.6vh, 6px) clamp(8px, 1.2vh, 12px);
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+/* ============================================
+   확인 화면 (CONFIRM STEP)
+   ============================================ */
+
+.confirmName {
+    font-size: clamp(36px, 5.5vh, 52px);
+    font-weight: 950;
+    letter-spacing: -0.05em;
+    text-align: center;
+    margin-bottom: clamp(12px, 1.5vh, 18px);
+    color: var(--text-black);
+    word-break: break-word;
+}
+
+.confirmDesc {
+    font-size: clamp(14px, 1.8vh, 20px);
+    font-weight: 700;
+    color: var(--text-medium);
+    text-align: center;
+    margin-bottom: clamp(20px, 2.5vh, 28px);
+    line-height: 1.5;
+}
+
+.confirmActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(12px, 1.5vh, 18px);
+    margin-top: 0;
+}
+
+/* ============================================
+   확인 버튼 (네/아니오)
+   ============================================ */
+
+.confirmBtn {
+    height: clamp(68px, 7.5vh, 84px);
+    border: none;
+    border-radius: var(--radius-button);
+    cursor: pointer;
+    font-size: clamp(16px, 2vh, 24px);
+    font-weight: 950;
+    letter-spacing: -0.02em;
+    transition: all var(--transition-fast);
+}
+
+.secondary {
+    background: #ffffff;
+    border: 2px solid rgba(122, 193, 67, 0.3);
+    color: var(--text-black);
+}
+
+.secondary:hover {
+    background: rgba(122, 193, 67, 0.08);
+    border-color: rgba(122, 193, 67, 0.5);
+}
+
+.secondary:active {
+    transform: scale(0.97);
+}
+
+.secondaryBtn {
+    width: 100%;
+    height: clamp(68px, 7.5vh, 84px);
+    border-radius: var(--radius-button);
+    cursor: pointer;
+    font-size: clamp(16px, 2vh, 22px);
+    font-weight: 950;
+    letter-spacing: -0.02em;
+    background: #ffffff;
+    border: 2px solid rgba(122, 193, 67, 0.3);
+    color: var(--text-black);
+    transition: all var(--transition-fast);
+    margin-top: clamp(14px, 1.8vh, 20px);
+}
+
+.secondaryBtn:hover {
+    background: rgba(122, 193, 67, 0.08);
+    border-color: rgba(122, 193, 67, 0.5);
+}
+
+.secondaryBtn:active {
+    transform: scale(0.97);
+}
+
+.primary {
+    background: var(--color-accent);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 10px 24px rgba(122, 193, 67, 0.28);
+}
+
+.primary:hover {
+    opacity: 0.88;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(122, 193, 67, 0.35);
+}
+
+.primary:active {
+    transform: translateY(0);
+}
+
+/* ============================================
+   휴대폰 번호 입력
+   ============================================ */
+
+.phoneContainer {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 1.5vh, 16px);
+    width: 100%;
+}
+
+.phoneInput {
+    width: 100%;
+    height: clamp(68px, 7vh, 84px);
+    border: 2px solid rgba(122, 193, 67, 0.6);
+    border-radius: 16px;
+    font-size: clamp(20px, 1.8vw, 28px);
+    font-weight: 950;
+    padding: 0 clamp(14px, 2vh, 18px);
+    text-align: center;
+    outline: none;
+    box-sizing: border-box;
+    transition: all var(--transition-normal);
+    letter-spacing: 8px;
+    color: var(--text-black);
+    background: #fafbfc;
+}
+
+.phoneInput:focus {
+    border-color: var(--color-accent);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(122, 193, 67, 0.15);
+}
+
+.phoneInput::placeholder {
+    color: rgba(10, 10, 10, 0.3);
+    letter-spacing: normal;
+}
+
+/* ============================================
+   숫자 키패드 (모던 디자인)
+   ============================================ */
+
+.numpadGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(5px, 0.8vh, 7px);
+    padding: clamp(10px, 1.5vh, 14px);
+    background: linear-gradient(135deg, rgba(245, 247, 250, 0.8) 0%, rgba(240, 244, 248, 0.5) 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(122, 193, 67, 0.12);
+    margin-top: clamp(8px, 1vh, 12px);
+}
+
+.numpadBtn {
+    height: clamp(56px, 6.5vh, 68px);
+    padding: 0;
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    border: 1px solid rgba(200, 210, 225, 0.7);
+    border-radius: 10px;
+    font-size: clamp(16px, 1.8vh, 20px);
+    font-weight: 950;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    color: var(--text-black);
+}
+
+.numpadBtn:hover {
+    background: linear-gradient(135deg, var(--color-accent) 0%, rgba(122, 193, 67, 0.9) 100%);
+    color: #ffffff;
+    border-color: var(--color-accent);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(122, 193, 67, 0.28);
+}
+
+.numpadBtn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(50, 130, 246, 0.2);
+}
+
+.numpadBtnReset {
+    height: clamp(56px, 6.5vh, 68px);
+    padding: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
+    border: 1px solid rgba(200, 210, 225, 0.6);
+    border-radius: 10px;
+    font-size: clamp(10px, 1.2vh, 12px);
+    font-weight: 950;
+    color: #5a6b7f;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.numpadBtnReset:hover {
+    background: linear-gradient(135deg, rgba(122, 193, 67, 0.15) 0%, rgba(122, 193, 67, 0.08) 100%);
+    color: var(--color-accent);
+    border-color: rgba(122, 193, 67, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(122, 193, 67, 0.15);
+}
+
+.numpadBtnReset:active {
+    transform: translateY(-1px);
+}
+
+.numpadBtnBackspace {
+    height: clamp(56px, 6.5vh, 68px);
+    padding: 0;
+    background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+    border: 1px solid rgba(220, 53, 69, 0.4);
+    border-radius: 10px;
+    font-size: clamp(16px, 1.8vh, 20px);
+    font-weight: 950;
+    color: #dc3545;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.12);
+}
+
+.numpadBtnBackspace:hover {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: #ffffff;
+    border-color: #dc3545;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.28);
+}
+
+.numpadBtnBackspace:active {
+    transform: translateY(-1px);
+}
+
+/* ============================================
+   반응형 (모바일/태블릿)
+   ============================================ */
+
+@media (max-width: 980px) {
+    .content {
+        grid-template-columns: 1fr;
+        gap: clamp(32px, 6vh, 48px);
+    }
+
+    .leftText {
+        font-size: clamp(42px, 5.5vh, 64px);
+    }
+
+    .card {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: clamp(16px, 4vh, 24px);
+    }
+
+    .content {
+        gap: clamp(28px, 4vh, 36px);
+    }
+
+    .leftText {
+        font-size: clamp(36px, 5vh, 52px);
+        line-height: 1.1;
+        margin-bottom: clamp(16px, 2vh, 24px);
+    }
+
+    .candidateName {
+        font-size: clamp(16px, 1.8vh, 24px);
+    }
+}

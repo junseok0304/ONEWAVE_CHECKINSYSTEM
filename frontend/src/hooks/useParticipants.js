@@ -1,0 +1,126 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/api';
+
+const QUERY_KEY = {
+    PARTICIPANTS: ['participants'],
+};
+
+const MASTER_PASSWORD = process.env.NEXT_PUBLIC_MASTER_PASSWORD || '';
+
+/**
+ * 모든 참가자 데이터를 조회하는 Hook
+ * 자동 캐싱 및 중복 요청 방지
+ */
+export function useParticipants() {
+    return useQuery({
+        queryKey: QUERY_KEY.PARTICIPANTS,
+        queryFn: () =>
+            apiRequest(
+                '/participants',
+                'GET',
+                undefined,
+                MASTER_PASSWORD
+            ),
+        staleTime: 30 * 1000,  // 30초 (기본값 5분보다 빠름)
+        gcTime: 10 * 60 * 1000, // 10분
+        refetchInterval: false,  // 자동 갱신 안함
+    });
+}
+
+/**
+ * 참가자 메모를 업데이트하는 Mutation
+ * 낙관적 업데이트 포함
+ */
+export function useUpdateParticipantMemo() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ participantId, memo }) =>
+            apiRequest(
+                `/participants/${participantId}`,
+                'PUT',
+                { memo },
+                MASTER_PASSWORD
+            ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: QUERY_KEY.PARTICIPANTS });
+        },
+        onError: (error) => {
+            console.error('메모 업데이트 실패:', error);
+        },
+    });
+}
+
+/**
+ * 체크아웃 메모를 업데이트하는 Mutation
+ */
+export function useUpdateCheckoutMemo() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ participantId, checkedOutMemo }) =>
+            apiRequest(
+                `/participants/${participantId}`,
+                'PUT',
+                { checkedOutMemo },
+                MASTER_PASSWORD
+            ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: QUERY_KEY.PARTICIPANTS });
+        },
+        onError: (error) => {
+            console.error('체크아웃 메모 업데이트 실패:', error);
+        },
+    });
+}
+
+/**
+ * 체크인 상태를 토글하는 Mutation
+ */
+export function useToggleCheckin() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ participantId, status }) =>
+            apiRequest(
+                `/participants/${participantId}`,
+                'PUT',
+                { checked_in_status: status },
+                MASTER_PASSWORD
+            ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: QUERY_KEY.PARTICIPANTS });
+        },
+    });
+}
+
+/**
+ * 체크아웃 상태를 토글하는 Mutation
+ */
+export function useToggleCheckout() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ participantId, checkedOutAt }) =>
+            apiRequest(
+                `/participants/${participantId}`,
+                'PUT',
+                { checkedOutAt },
+                MASTER_PASSWORD
+            ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: QUERY_KEY.PARTICIPANTS });
+        },
+    });
+}
+
+/**
+ * 수동 새로고침 함수
+ */
+export function useRefreshParticipants() {
+    const queryClient = useQueryClient();
+
+    return () => {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEY.PARTICIPANTS });
+    };
+}
