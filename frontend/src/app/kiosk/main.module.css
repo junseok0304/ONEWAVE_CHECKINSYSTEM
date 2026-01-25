@@ -29,6 +29,72 @@
 }
 
 /* ============================================
+   Animations
+   ============================================ */
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 12px 28px rgba(122, 193, 67, 0.28);
+  }
+  50% {
+    box-shadow: 0 16px 40px rgba(122, 193, 67, 0.42);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
    Container & Layout
    ============================================ */
 .container {
@@ -76,6 +142,7 @@
   padding-bottom: clamp(24px, 5vw, 48px);
   align-self: stretch;
   word-break: keep-all;
+  animation: slideInLeft 0.8s ease-out;
 }
 
 .highlight {
@@ -107,12 +174,16 @@
   flex-direction: column;
   gap: clamp(16px, 2vh, 24px);
   align-items: center;
+  animation: slideInRight 0.8s ease-out, pulse 3s ease-in-out infinite;
+  animation-delay: 0.2s, 1.2s;
 }
 
 .icon {
   font-size: clamp(40px, 5vh, 64px);
   line-height: 1;
   margin-bottom: clamp(6px, 1vh, 12px);
+  animation: float 3s ease-in-out infinite;
+  animation-delay: 0.5s;
 }
 
 .title {
@@ -121,6 +192,7 @@
   letter-spacing: -0.04em;
   color: var(--text-black);
   text-align: center;
+  animation: fadeInUp 0.8s ease-out 0.4s backwards;
 }
 
 .button {
@@ -137,6 +209,7 @@
   box-shadow: 0 12px 28px rgba(122, 193, 67, 0.28);
   transition: all var(--transition-fast);
   letter-spacing: -0.02em;
+  animation: scaleIn 0.8s ease-out 0.6s backwards;
 }
 
 .button:hover {
