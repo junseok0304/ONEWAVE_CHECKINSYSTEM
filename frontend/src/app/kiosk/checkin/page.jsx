@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './checkin.module.css';
 
@@ -12,6 +12,40 @@ export default function CheckinPage() {
     const [selectedParticipant, setSelectedParticipant] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const timeoutRef = useRef(null);
+
+    // 타이머 리셋 함수
+    const resetTimeout = () => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = setTimeout(() => {
+            router.push('/kiosk');
+        }, 20000); // 20초
+    };
+
+    // 첫 마운트 시 타이머 시작 및 이벤트 리스너 추가
+    useEffect(() => {
+        resetTimeout();
+
+        // 사용자 interaction 감지
+        const handleUserActivity = () => {
+            resetTimeout();
+        };
+
+        window.addEventListener('click', handleUserActivity);
+        window.addEventListener('keydown', handleUserActivity);
+        window.addEventListener('touchstart', handleUserActivity);
+
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+            window.removeEventListener('click', handleUserActivity);
+            window.removeEventListener('keydown', handleUserActivity);
+            window.removeEventListener('touchstart', handleUserActivity);
+        };
+    }, [router]);
 
     const handlePhoneSearch = async (e, searchValue = null) => {
         e.preventDefault();

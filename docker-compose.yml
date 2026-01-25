@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qrcheckin-backend
+    restart: always
+    ports:
+      - "8081:8080"
+    environment:
+      - NODE_ENV=production
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
+      - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
+      - MASTER_PASSWORD=${MASTER_PASSWORD}
+      - KIOSK_PASSWORD=${KIOSK_PASSWORD}
+    volumes:
+      - ./backend/src:/app/src
+    networks:
+      - qrcheckin-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_BASE_URL=/api
+        - NEXT_PUBLIC_MASTER_PASSWORD=${NEXT_PUBLIC_MASTER_PASSWORD}
+        - NEXT_PUBLIC_KIOSK_PASSWORD=${NEXT_PUBLIC_KIOSK_PASSWORD}
+    container_name: qrcheckin-frontend
+    restart: always
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    networks:
+      - qrcheckin-network
+
+networks:
+  qrcheckin-network:
+    driver: bridge

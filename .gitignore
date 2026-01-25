@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+.env.production
 
 # Firebase credentials (민감한 정보)
 *-firebase-adminsdk-*.json
