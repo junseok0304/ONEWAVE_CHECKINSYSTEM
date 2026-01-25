@@ -17,6 +17,7 @@ const allowedOrigins = [
     'http://127.0.0.1:3001',
     'http://192.168.68.54:3000',
     'http://192.168.68.54:3001',
+    'https://checkin.omong.kr',
     process.env.CORS_ORIGIN,
 ];
 
