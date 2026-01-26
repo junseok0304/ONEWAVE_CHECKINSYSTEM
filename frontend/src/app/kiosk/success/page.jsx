@@ -11,10 +11,11 @@ export default function SuccessPage() {
     // 페이지 마운트 시 오디오 재생
     useEffect(() => {
         let audioElement = null;
-        let retryCount = 0;
-        const maxRetries = 5;
+        let played = false;
 
-        const playAudio = async () => {
+        const playAudio = () => {
+            if (played) return;
+
             try {
                 if (!audioElement) {
                     audioElement = new Audio('/correct.mp3');
@@ -22,43 +23,42 @@ export default function SuccessPage() {
                     audioElement.crossOrigin = 'anonymous';
                 }
 
-                // iOS에서 재생 시도
                 const playPromise = audioElement.play();
                 if (playPromise !== undefined) {
-                    await playPromise;
+                    playPromise.then(() => {
+                        played = true;
+                    }).catch(() => {
+                        // 실패 시 재시도
+                        setTimeout(playAudio, 100);
+                    });
+                } else {
+                    played = true;
                 }
             } catch (err) {
-                // 재생 실패 시 재시도 (최대 5번)
-                if (retryCount < maxRetries) {
-                    retryCount++;
-                    setTimeout(() => {
-                        playAudio();
-                    }, 500 + (retryCount * 500));
-                }
+                setTimeout(playAudio, 100);
             }
         };
 
-        // 초기 재생 시도 - 더 긴 딜레이
-        const initialTimer = setTimeout(() => {
-            playAudio();
-        }, 800);
+        // 가장 빠른 방법: 즉시 시도
+        playAudio();
 
-        // 사용자 인터랙션 감지 시 재시도
-        const handleInteraction = () => {
-            retryCount = 0;
+        // 폴백: 100ms 후 재시도
+        const timer1 = setTimeout(playAudio, 100);
+
+        // 사용자 제스처 감지 (가장 확실함)
+        const handleUserGesture = () => {
             playAudio();
-            // 한 번 재생되면 이벤트 리스너 제거
-            document.removeEventListener('click', handleInteraction);
-            document.removeEventListener('touchstart', handleInteraction);
+            document.removeEventListener('click', handleUserGesture);
+            document.removeEventListener('touchstart', handleUserGesture);
         };
 
-        document.addEventListener('click', handleInteraction);
-        document.addEventListener('touchstart', handleInteraction);
+        document.addEventListener('click', handleUserGesture, { once: true });
+        document.addEventListener('touchstart', handleUserGesture, { once: true });
 
         return () => {
-            clearTimeout(initialTimer);
-            document.removeEventListener('click', handleInteraction);
-            document.removeEventListener('touchstart', handleInteraction);
+            clearTimeout(timer1);
+            document.removeEventListener('click', handleUserGesture);
+            document.removeEventListener('touchstart', handleUserGesture);
             if (audioElement) {
                 audioElement.pause();
                 audioElement.src = '';
