@@ -409,8 +409,8 @@
 }
 
 .candidateName {
-    font-size: clamp(24px, 2.8vh, 40px);
-    font-weight: 950;
+    font-size: clamp(22px, 2.6vh, 36px);
+    font-weight: 900;
     letter-spacing: -0.02em;
     color: var(--text-black);
     flex: 1;
@@ -750,6 +750,6 @@
     }
 
     .candidateName {
-        font-size: clamp(18px, 2.2vh, 28px);
+        font-size: clamp(17px, 2.1vh, 26px);
     }
 }
