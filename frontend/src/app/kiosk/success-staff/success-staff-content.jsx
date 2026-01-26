@@ -64,8 +64,21 @@ export default function SuccessStaffContent() {
         document.addEventListener('click', handleUserGesture, { once: true });
         document.addEventListener('touchstart', handleUserGesture, { once: true });
 
+        // 자동으로 사용자 제스처 시뮬레이션 (구형 iOS 기기용)
+        const simulateUserGesture = () => {
+            const touchEvent = new TouchEvent('touchstart', {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+            });
+            document.documentElement.dispatchEvent(touchEvent);
+        };
+
+        const timer2 = setTimeout(simulateUserGesture, 50);
+
         return () => {
             clearTimeout(timer1);
+            clearTimeout(timer2);
             document.removeEventListener('click', handleUserGesture);
             document.removeEventListener('touchstart', handleUserGesture);
             if (audioElement) {
