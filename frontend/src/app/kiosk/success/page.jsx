@@ -28,34 +28,14 @@ export default function SuccessPage() {
                     playPromise.then(() => {
                         played = true;
                     }).catch(() => {
-                        // 실패 시 재시도
-                        setTimeout(playAudio, 100);
+                        // 실패 시 계속 재시도
                     });
-                } else {
-                    played = true;
                 }
             } catch (err) {
-                setTimeout(playAudio, 100);
+                // 에러 무시
             }
         };
 
-        // 가장 빠른 방법: 즉시 시도
-        playAudio();
-
-        // 폴백: 100ms 후 재시도
-        const timer1 = setTimeout(playAudio, 100);
-
-        // 사용자 제스처 감지 (가장 확실함)
-        const handleUserGesture = () => {
-            playAudio();
-            document.removeEventListener('click', handleUserGesture);
-            document.removeEventListener('touchstart', handleUserGesture);
-        };
-
-        document.addEventListener('click', handleUserGesture, { once: true });
-        document.addEventListener('touchstart', handleUserGesture, { once: true });
-
-        // 자동으로 사용자 제스처 시뮬레이션 (구형 iOS 기기용)
         const simulateUserGesture = () => {
             const touchEvent = new TouchEvent('touchstart', {
                 bubbles: true,
@@ -63,13 +43,37 @@ export default function SuccessPage() {
                 view: window,
             });
             document.documentElement.dispatchEvent(touchEvent);
+            playAudio();
         };
 
-        const timer2 = setTimeout(simulateUserGesture, 50);
+        // 즉시 재생 시도
+        playAudio();
+
+        // 매우 짧은 간격으로 여러 번 재생 시도 및 터치 이벤트 발생
+        const timers = [
+            setTimeout(playAudio, 30),
+            setTimeout(playAudio, 60),
+            setTimeout(simulateUserGesture, 50),
+            setTimeout(playAudio, 100),
+            setTimeout(simulateUserGesture, 120),
+            setTimeout(playAudio, 150),
+            setTimeout(simulateUserGesture, 180),
+            setTimeout(playAudio, 250),
+            setTimeout(simulateUserGesture, 300),
+        ];
+
+        // 사용자 제스처 감지 (실제 터치/클릭 시)
+        const handleUserGesture = () => {
+            playAudio();
+            document.removeEventListener('click', handleUserGesture);
+            document.removeEventListener('touchstart', handleUserGesture);
+        };
+
+        document.addEventListener('click', handleUserGesture);
+        document.addEventListener('touchstart', handleUserGesture);
 
         return () => {
-            clearTimeout(timer1);
-            clearTimeout(timer2);
+            timers.forEach(timer => clearTimeout(timer));
             document.removeEventListener('click', handleUserGesture);
             document.removeEventListener('touchstart', handleUserGesture);
             if (audioElement) {
