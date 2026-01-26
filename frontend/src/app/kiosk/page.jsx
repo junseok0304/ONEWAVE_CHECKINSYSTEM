@@ -17,8 +17,16 @@ export default function KioskMainPage() {
 
                 <div className={styles.right}>
                     <div className={styles.card}>
-                        <div className={styles.icon} aria-hidden="true">
-                            🌊
+                        <div className={styles.icon}>
+                            <img
+                                src="/favicon.ico"
+                                alt="ONEWAVE"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'contain'
+                                }}
+                            />
                         </div>
 
                         <div className={styles.title}>
