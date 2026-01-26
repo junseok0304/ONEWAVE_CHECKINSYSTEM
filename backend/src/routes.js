@@ -6,40 +6,45 @@ const router = express.Router();
 
 router.get('/', (req, res) => res.json({ message: 'QRCheckin API Online' }));
 
+// Firebase Timestamp를 ISO 문자열로 변환
+const formatTimestamp = (timestamp) => {
+    if (!timestamp) return null;
+    try {
+        if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+            return timestamp.toDate().toISOString();
+        }
+        if (timestamp instanceof Date) {
+            return timestamp.toISOString();
+        }
+        if (typeof timestamp === 'string') {
+            return new Date(timestamp).toISOString();
+        }
+        return null;
+    } catch (e) {
+        return null;
+    }
+};
+
+// 휴대폰 번호에서 끝 4자리 추출 (010-2140-7614 → 7614)
+const getPhoneLast4 = (phone) => {
+    if (!phone) return '';
+    return phone.replace(/-/g, '').slice(-4);
+};
+
 // 참가자 조회 (관리자용)
 router.get('/participants', verifyPassword, async (req, res) => {
-    const snapshot = await db.collection('participants').get();
+    const snapshot = await db.collection('participants_checkin').get();
     const data = snapshot.docs.map(doc => {
         const docData = doc.data();
 
-        // Firebase Timestamp를 ISO 문자열로 변환
-        const formatTimestamp = (timestamp) => {
-            if (!timestamp) return null;
-            try {
-                // Firebase Timestamp 객체인 경우
-                if (timestamp.toDate && typeof timestamp.toDate === 'function') {
-                    return timestamp.toDate().toISOString();
-                }
-                // 이미 Date 객체인 경우
-                if (timestamp instanceof Date) {
-                    return timestamp.toISOString();
-                }
-                // 문자열인 경우
-                if (typeof timestamp === 'string') {
-                    return new Date(timestamp).toISOString();
-                }
-                return null;
-            } catch (e) {
-                return null;
-            }
-        };
-
         return {
             id: doc.id,
+            email: docData.email,
             name: docData.name,
-            team_number: docData.team_number || '',
-            part: docData.part || '',
-            phone_number: docData.phone_number,
+            team_number: docData.teamNumber || 0,
+            part: docData.position || '',
+            phone_number: docData.phone,
+            status: docData.status || 'REJECTED',
             isCheckedIn: docData.checked_in_status || false,
             checkedInAt: formatTimestamp(docData.checkedInAt),
             memo: docData.memo || '',
@@ -59,19 +64,20 @@ router.get('/search', async (req, res) => {
     }
 
     try {
-        const snapshot = await db.collection('participants').get();
+        const snapshot = await db.collection('participants_checkin').get();
         const results = [];
 
         snapshot.forEach(doc => {
             const data = doc.data();
-            const phoneLastDigits = data.phone_number?.slice(-4);
+            const phoneLastDigits = getPhoneLast4(data.phone);
             if (phoneLastDigits === phoneLast4) {
                 results.push({
                     id: doc.id,
+                    email: data.email,
                     name: data.name,
-                    phone_number: data.phone_number,
+                    phone_number: data.phone,
                     checked_in_status: data.checked_in_status,
-                    team_number: data.team_number,
+                    team_number: data.teamNumber,
                     status: data.status || 'REJECTED',
                 });
             }
@@ -96,7 +102,7 @@ router.post('/checkin', async (req, res) => {
         return res.status(400).json({ message: '참가자 ID가 필요합니다.' });
     }
 
-    const doc = await db.collection('participants').doc(participantId).get();
+    const doc = await db.collection('participants_checkin').doc(participantId).get();
 
     if (!doc.exists) {
         return res.status(404).json({ message: '참가자를 찾을 수 없습니다.' });
@@ -108,7 +114,7 @@ router.post('/checkin', async (req, res) => {
         return res.status(409).json({ message: '이미 체크인됨' });
     }
 
-    await db.collection('participants').doc(participantId).update({
+    await db.collection('participants_checkin').doc(participantId).update({
         checked_in_status: true,
         checkedInAt: new Date(),
         updatedAt: new Date(),
@@ -126,7 +132,7 @@ router.put('/participants/:participantId', verifyPassword, async (req, res) => {
         return res.status(400).json({ message: '참가자 ID가 필요합니다.' });
     }
 
-    const doc = await db.collection('participants').doc(participantId).get();
+    const doc = await db.collection('participants_checkin').doc(participantId).get();
 
     if (!doc.exists) {
         return res.status(404).json({ message: '참가자를 찾을 수 없습니다.' });
@@ -160,7 +166,7 @@ router.put('/participants/:participantId', verifyPassword, async (req, res) => {
         updateData.checkedOutAt = checkedOutAt ? new Date(checkedOutAt) : null;
     }
 
-    await db.collection('participants').doc(participantId).update(updateData);
+    await db.collection('participants_checkin').doc(participantId).update(updateData);
 
     res.json({ success: true, participantId });
 });

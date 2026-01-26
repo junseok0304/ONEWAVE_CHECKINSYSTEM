@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import styles from './adminLayout.module.css';
 
-const ADMIN_PASSWORD = '000000';
+const ADMIN_PASSWORD = '352400';
 
 export default function AdminLayout({ children }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
