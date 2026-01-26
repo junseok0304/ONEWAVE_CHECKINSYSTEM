@@ -486,7 +486,7 @@
 }
 
 .confirmDesc {
-    font-size: clamp(14px, 1.8vh, 20px);
+    font-size: clamp(18px, 2.2vh, 28px);
     font-weight: 700;
     color: var(--text-medium);
     text-align: center;
