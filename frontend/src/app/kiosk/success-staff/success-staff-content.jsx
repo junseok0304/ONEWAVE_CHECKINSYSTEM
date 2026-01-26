@@ -19,22 +19,60 @@ export default function SuccessStaffContent() {
 
     // 페이지 마운트 시 오디오 재생 (운영진용 음성)
     useEffect(() => {
+        let audioElement = null;
+        let retryCount = 0;
+        const maxRetries = 5;
+
         const playAudio = async () => {
             try {
-                const audio = new Audio('/correctAdmin.mp3');
-                audio.volume = 1;
-                await audio.play();
+                if (!audioElement) {
+                    audioElement = new Audio('/correctAdmin.mp3');
+                    audioElement.volume = 1;
+                    audioElement.crossOrigin = 'anonymous';
+                }
+
+                // iOS에서 재생 시도
+                const playPromise = audioElement.play();
+                if (playPromise !== undefined) {
+                    await playPromise;
+                }
             } catch (err) {
-                // 오류 무시 (자동 재생 정책 제한)
+                // 재생 실패 시 재시도 (최대 5번)
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    setTimeout(() => {
+                        playAudio();
+                    }, 500 + (retryCount * 500));
+                }
             }
         };
 
-        // 약간의 딜레이 후 재생
-        const timer = setTimeout(() => {
+        // 초기 재생 시도 - 더 긴 딜레이
+        const initialTimer = setTimeout(() => {
             playAudio();
-        }, 300);
+        }, 800);
 
-        return () => clearTimeout(timer);
+        // 사용자 인터랙션 감지 시 재시도
+        const handleInteraction = () => {
+            retryCount = 0;
+            playAudio();
+            // 한 번 재생되면 이벤트 리스너 제거
+            document.removeEventListener('click', handleInteraction);
+            document.removeEventListener('touchstart', handleInteraction);
+        };
+
+        document.addEventListener('click', handleInteraction);
+        document.addEventListener('touchstart', handleInteraction);
+
+        return () => {
+            clearTimeout(initialTimer);
+            document.removeEventListener('click', handleInteraction);
+            document.removeEventListener('touchstart', handleInteraction);
+            if (audioElement) {
+                audioElement.pause();
+                audioElement.src = '';
+            }
+        };
     }, []);
 
     useEffect(() => {
