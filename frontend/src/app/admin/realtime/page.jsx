@@ -63,11 +63,11 @@ export default function RealtimePage() {
 
         // 1-50 팀 초기화
         for (let i = 1; i <= 50; i++) {
-            teamMap[i] = { teamNumber: i, members: [], allCheckedIn: false };
+            teamMap[i] = { teamNumber: i, members: [], allCheckedIn: false, checkInRate: 0 };
         }
 
         // 운영진 팀 (team_number === 0) 초기화
-        teamMap[0] = { teamNumber: 0, members: [], allCheckedIn: false, isAdmin: true };
+        teamMap[0] = { teamNumber: 0, members: [], allCheckedIn: false, isAdmin: true, checkInRate: 0 };
 
         // 참가자 그룹화
         participants.forEach(p => {
@@ -77,9 +77,11 @@ export default function RealtimePage() {
             }
         });
 
-        // 각 팀의 체크인 완료 여부 계산
+        // 각 팀의 체크인 완료 여부 및 비율 계산
         Object.values(teamMap).forEach(team => {
             if (team.members.length > 0) {
+                const checkedInCount = team.members.filter(m => m.isCheckedIn).length;
+                team.checkInRate = (checkedInCount / team.members.length) * 100;
                 team.allCheckedIn = team.members.every(m => m.isCheckedIn);
             }
         });
@@ -234,16 +236,52 @@ export default function RealtimePage() {
             <div className={styles.gridContainer}>
                 <div className={styles.gridTitle}>팀 체크인 현황 (GitHub Grass 스타일) - 팀을 클릭하면 명단 보기</div>
                 <div className={styles.teamGrid}>
-                    {teamStatus.map(team => (
-                        <div
-                            key={team.teamNumber}
-                            className={`${styles.teamBlock} ${team.allCheckedIn ? styles.complete : styles.incomplete} ${selectedTeamNumber === team.teamNumber ? styles.selected : ''} ${team.isAdmin ? styles.adminTeam : ''}`}
-                            title={`${team.isAdmin ? '운영진' : `팀 ${team.teamNumber}`}: ${team.members.length}명 (${team.members.filter(m => m.isCheckedIn).length}명 체크인)`}
-                            onClick={() => setSelectedTeamNumber(selectedTeamNumber === team.teamNumber ? null : team.teamNumber)}
-                        >
-                            {team.isAdmin ? '운영진' : team.teamNumber}
-                        </div>
-                    ))}
+                    {teamStatus.map(team => {
+                        // 팀 멤버가 없는 경우 회색
+                        let backgroundColor = '#e5e7eb';
+                        let textColor = 'rgba(0, 0, 0, 0.4)';
+
+                        // 팀 멤버가 있는 경우 체크인 비율에 따라 색상 결정
+                        if (team.members.length > 0) {
+                            const rate = team.checkInRate;
+                            if (rate === 0) {
+                                // 0%: 회색
+                                backgroundColor = '#e5e7eb';
+                                textColor = 'rgba(0, 0, 0, 0.4)';
+                            } else if (rate <= 25) {
+                                // 1-25%: 연한 초록
+                                backgroundColor = 'rgba(122, 193, 67, 0.25)';
+                                textColor = 'rgba(0, 0, 0, 0.6)';
+                            } else if (rate <= 50) {
+                                // 26-50%: 중간 초록
+                                backgroundColor = 'rgba(122, 193, 67, 0.5)';
+                                textColor = 'rgba(0, 0, 0, 0.7)';
+                            } else if (rate <= 75) {
+                                // 51-75%: 진한 초록
+                                backgroundColor = 'rgba(122, 193, 67, 0.75)';
+                                textColor = '#ffffff';
+                            } else {
+                                // 76-100%: 매우 진한 초록
+                                backgroundColor = '#7AC143';
+                                textColor = '#ffffff';
+                            }
+                        }
+
+                        return (
+                            <div
+                                key={team.teamNumber}
+                                className={`${styles.teamBlock} ${selectedTeamNumber === team.teamNumber ? styles.selected : ''} ${team.isAdmin ? styles.adminTeam : ''}`}
+                                style={{
+                                    backgroundColor: backgroundColor,
+                                    color: textColor,
+                                }}
+                                title={`${team.isAdmin ? '운영진' : `팀 ${team.teamNumber}`}: ${team.members.length}명 (${team.members.filter(m => m.isCheckedIn).length}명 체크인)`}
+                                onClick={() => setSelectedTeamNumber(selectedTeamNumber === team.teamNumber ? null : team.teamNumber)}
+                            >
+                                {team.isAdmin ? '운영진' : team.teamNumber}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
