@@ -8,6 +8,26 @@ export default function SuccessPage() {
     const router = useRouter();
     const [count, setCount] = useState(5);
 
+    // 페이지 마운트 시 오디오 재생
+    useEffect(() => {
+        const playAudio = async () => {
+            try {
+                const audio = new Audio('/correct.mp3');
+                audio.volume = 1;
+                await audio.play();
+            } catch (err) {
+                // 오류 무시 (자동 재생 정책 제한)
+            }
+        };
+
+        // 약간의 딜레이 후 재생
+        const timer = setTimeout(() => {
+            playAudio();
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, []);
+
     useEffect(() => {
         const interval = setInterval(() => {
             setCount((prev) => prev - 1);
@@ -41,8 +61,16 @@ export default function SuccessPage() {
 
                 <div className={styles.right}>
                     <div className={styles.card}>
-                        <div className={styles.icon} aria-hidden="true">
-                            ✅
+                        <div className={styles.icon}>
+                            <img
+                                src="/checkCorrect.gif"
+                                alt="체크인 완료"
+                                style={{
+                                    width: '50%',
+                                    height: 'auto',
+                                    objectFit: 'contain'
+                                }}
+                            />
                         </div>
 
                         <div className={styles.title}>
@@ -50,7 +78,7 @@ export default function SuccessPage() {
                         </div>
 
                         <div className={styles.desc}>
-                            행사에 참가해주셔서 감사합니다.
+                            즐거운 개발 되세요!
                         </div>
 
                         <div className={styles.timer}>

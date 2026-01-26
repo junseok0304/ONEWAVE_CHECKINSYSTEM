@@ -333,18 +333,16 @@ export default function CheckinPage() {
                                                 disabled={candidate.checked_in_status}
                                             >
                                                 <div className={styles.candidateRow}>
+                                                    <div className={styles.discordCircle} title={candidate.status?.trim() === 'APPROVED' ? '가입함' : candidate.status?.trim() === 'PENDING' ? '확인중' : '거절됨'}>
+                                                        <div className={`${styles.circle} ${candidate.status?.trim() === 'APPROVED' ? styles.approved : candidate.status?.trim() === 'PENDING' ? styles.pending : styles.rejected}`}>
+                                                        </div>
+                                                    </div>
+
                                                     <div className={styles.candidateName}>
                                                         {candidate.name}
                                                     </div>
 
                                                     <div className={styles.badgeContainer}>
-                                                        <div className={styles.discordBadge}>
-                                                            <span className={styles.discordLogo}>🔐</span>
-                                                            <span className={`${styles.discordStatus} ${candidate.status?.trim() === 'APPROVED' ? styles.approved : candidate.status?.trim() === 'PENDING' ? styles.pending : styles.rejected}`}>
-                                                                {candidate.status?.trim() === 'APPROVED' ? '가입함' : candidate.status?.trim() === 'PENDING' ? '확인중' : '거절됨'}
-                                                            </span>
-                                                        </div>
-
                                                         {(candidate.team_number === 0 || candidate.team_number === '0') && (
                                                             <div className={styles.staffBadge}>
                                                                 STAFF

@@ -17,6 +17,26 @@ export default function SuccessStaffContent() {
         }
     }, [searchParams]);
 
+    // 페이지 마운트 시 오디오 재생 (운영진용 음성)
+    useEffect(() => {
+        const playAudio = async () => {
+            try {
+                const audio = new Audio('/correctAdmin.mp3');
+                audio.volume = 1;
+                await audio.play();
+            } catch (err) {
+                // 오류 무시 (자동 재생 정책 제한)
+            }
+        };
+
+        // 약간의 딜레이 후 재생
+        const timer = setTimeout(() => {
+            playAudio();
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, []);
+
     useEffect(() => {
         const interval = setInterval(() => {
             setCount((prev) => prev - 1);
@@ -51,7 +71,17 @@ export default function SuccessStaffContent() {
                 <div className={styles.right}>
                     <div className={styles.card}>
                         <div className={styles.iconContainer}>
-                            <div className={styles.icon}>👑</div>
+                            <div className={styles.icon}>
+                                <img
+                                    src="/checkCorrect.gif"
+                                    alt="체크인 완료"
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'contain'
+                                    }}
+                                />
+                            </div>
                         </div>
 
                         <div className={styles.title}>
@@ -60,10 +90,6 @@ export default function SuccessStaffContent() {
 
                         <div className={styles.staffBadge}>
                             STAFF
-                        </div>
-
-                        <div className={styles.desc}>
-                            성공적으로 등록되었습니다.
                         </div>
 
                         <div className={styles.subDesc}>

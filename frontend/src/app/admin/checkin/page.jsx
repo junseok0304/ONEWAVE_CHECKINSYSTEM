@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { useParticipants, useToggleCheckin, useToggleCheckout, useUpdateParticipantMemo, useUpdateCheckoutMemo } from '@/hooks/useParticipants';
+import { useParticipants, useToggleCheckin, useToggleCheckout, useUpdateParticipantMemo, useUpdateCheckoutMemo, useRefreshParticipants } from '@/hooks/useParticipants';
 import { formatPhoneNumber } from '@/lib/format';
 
 // 상수
@@ -36,11 +36,12 @@ export default function StatusManagementPage() {
     const toggleCheckout = useToggleCheckout();
     const updateParticipantMemo = useUpdateParticipantMemo();
     const updateCheckoutMemo = useUpdateCheckoutMemo();
+    const refreshParticipants = useRefreshParticipants();
 
     // 필터 및 정렬
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState(FILTER_OPTIONS.ALL);
-    const [sortBy, setSortBy] = useState(SORT_OPTIONS.NAME);
+    const [sortBy, setSortBy] = useState(SORT_OPTIONS.TEAM);
 
     // 메모 편집
     const [editingId, setEditingId] = useState(null);
@@ -68,11 +69,17 @@ export default function StatusManagementPage() {
             })
             .sort((a, b) => {
                 if (sortBy === SORT_OPTIONS.TEAM) {
+                    // 팀순: 팀번호로 먼저 정렬, 같은 팀이면 이름으로 정렬
                     const teamA = parseInt(a.team_number) || 0;
                     const teamB = parseInt(b.team_number) || 0;
-                    return teamA - teamB;
+                    if (teamA !== teamB) {
+                        return teamA - teamB;
+                    }
+                    return (a.name || '').localeCompare(b.name || '', 'ko-KR');
+                } else {
+                    // 이름순: 팀 상관없이 이름으로만 정렬
+                    return (a.name || '').localeCompare(b.name || '', 'ko-KR');
                 }
-                return (a.name || '').localeCompare(b.name || '');
             });
     }, [participants, searchTerm, filterStatus, sortBy]);
 
@@ -222,44 +229,72 @@ export default function StatusManagementPage() {
                     <option value="name">이름순</option>
                     <option value="team">팀순</option>
                 </select>
+                <button
+                    onClick={refreshParticipants}
+                    disabled={isLoading}
+                    style={{
+                        padding: '12px 16px',
+                        backgroundColor: '#3282f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: isLoading ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        opacity: isLoading ? 0.6 : 1,
+                    }}
+                    onMouseEnter={(e) => {
+                        if (!isLoading) {
+                            e.target.style.backgroundColor = '#2d6fd9';
+                            e.target.style.boxShadow = '0 4px 8px rgba(50, 130, 246, 0.3)';
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (!isLoading) {
+                            e.target.style.backgroundColor = '#3282f6';
+                            e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+                        }
+                    }}
+                >
+                    {isLoading ? '새로고침 중...' : '새로고침'}
+                </button>
             </div>
 
             {/* 테이블 */}
-            <div style={{ overflowX: 'auto' }}>
+            <div style={{ overflowX: 'auto', border: '1px solid #dee2e6', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                 <table style={{
                     width: '100%',
                     borderCollapse: 'collapse',
                     backgroundColor: 'white',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    minWidth: '1200px',
+                    minWidth: '1600px',
                 }}>
                     <thead>
                         <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>이름</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>팀</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>파트</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>전화번호</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>체크인</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>체크인 시간</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>참가자 메모</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>체크아웃</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>체크아웃 시간</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>체크아웃 메모</th>
-                            <th style={{ padding: '12px', textAlign: 'center' }}>작업</th>
+                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '100px' }}>이름</th>
+                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '50px' }}>팀</th>
+                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '60px' }}>파트</th>
+                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '120px' }}>전화번호</th>
+                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '70px' }}>체크인</th>
+                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '150px' }}>체크인 시간</th>
+                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '150px' }}>참가자 메모</th>
+                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '70px' }}>체크아웃</th>
+                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '150px' }}>체크아웃 시간</th>
+                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '150px' }}>체크아웃 메모</th>
+                            <th style={{ padding: '12px', textAlign: 'center', whiteSpace: 'nowrap', minWidth: '80px' }}>작업</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredParticipants.map((p) => (
                             <tr key={p.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                                <td style={{ padding: '12px' }}>{p.name}</td>
-                                <td style={{ padding: '12px' }}>{p.team_number || '-'}</td>
-                                <td style={{ padding: '12px' }}>{p.part || '-'}</td>
-                                <td style={{ padding: '12px', fontSize: '12px' }}>
+                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '100px' }}>{p.name}</td>
+                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '50px' }}>{p.team_number || '-'}</td>
+                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '60px' }}>{p.part || '-'}</td>
+                                <td style={{ padding: '12px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '120px' }}>
                                     {formatPhoneNumber(p.phone_number)}
                                 </td>
-                                <td style={{ padding: '12px' }}>
+                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '70px' }}>
                                     <span style={{
                                         padding: '4px 8px',
                                         borderRadius: '4px',
@@ -271,19 +306,20 @@ export default function StatusManagementPage() {
                                         {p.isCheckedIn ? '체크인' : '미체크인'}
                                     </span>
                                 </td>
-                                <td style={{ padding: '12px', fontSize: '12px' }}>
+                                <td style={{ padding: '12px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '150px' }}>
                                     {formatDate(p.checkedInAt)}
                                 </td>
                                 {/* 참가자 메모 */}
-                                <td style={{ padding: '12px' }}>
+                                <td style={{ padding: '12px', minWidth: '150px', maxWidth: '150px' }}>
                                     {editingId === p.id && editingMemoType === 'participant' ? (
-                                        <div style={{ display: 'flex', gap: '5px' }}>
+                                        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                                             <input
                                                 type="text"
                                                 value={editingMemo}
                                                 onChange={(e) => setEditingMemo(e.target.value)}
                                                 style={{
                                                     flex: 1,
+                                                    minWidth: '80px',
                                                     padding: '6px',
                                                     border: '1px solid #ddd',
                                                     borderRadius: '4px',
@@ -293,13 +329,14 @@ export default function StatusManagementPage() {
                                             <button
                                                 onClick={() => handleSaveMemo(p.id)}
                                                 style={{
-                                                    padding: '6px 12px',
+                                                    padding: '6px 8px',
                                                     backgroundColor: '#28a745',
                                                     color: 'white',
                                                     border: 'none',
                                                     borderRadius: '4px',
                                                     cursor: 'pointer',
-                                                    fontSize: '12px',
+                                                    fontSize: '11px',
+                                                    whiteSpace: 'nowrap',
                                                 }}
                                             >
                                                 저장
@@ -307,13 +344,14 @@ export default function StatusManagementPage() {
                                             <button
                                                 onClick={() => setEditingId(null)}
                                                 style={{
-                                                    padding: '6px 12px',
+                                                    padding: '6px 8px',
                                                     backgroundColor: '#6c757d',
                                                     color: 'white',
                                                     border: 'none',
                                                     borderRadius: '4px',
                                                     cursor: 'pointer',
-                                                    fontSize: '12px',
+                                                    fontSize: '11px',
+                                                    whiteSpace: 'nowrap',
                                                 }}
                                             >
                                                 취소
@@ -323,7 +361,7 @@ export default function StatusManagementPage() {
                                         <button
                                             onClick={() => startEditMemo(p.id, p.memo, 'participant')}
                                             style={{
-                                                padding: '6px 12px',
+                                                padding: '6px 8px',
                                                 backgroundColor: p.memo ? '#e3f2fd' : '#e9ecef',
                                                 border: '1px solid #dee2e6',
                                                 borderRadius: '4px',
@@ -331,6 +369,10 @@ export default function StatusManagementPage() {
                                                 width: '100%',
                                                 textAlign: 'left',
                                                 fontWeight: p.memo ? '600' : '400',
+                                                fontSize: '12px',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
                                             }}
                                             title="클릭하여 메모 수정"
                                         >
@@ -338,7 +380,7 @@ export default function StatusManagementPage() {
                                         </button>
                                     )}
                                 </td>
-                                <td style={{ padding: '12px' }}>
+                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '70px' }}>
                                     <span style={{
                                         padding: '4px 8px',
                                         borderRadius: '4px',
@@ -350,19 +392,20 @@ export default function StatusManagementPage() {
                                         {p.checkedOutAt ? '체크아웃' : '대기'}
                                     </span>
                                 </td>
-                                <td style={{ padding: '12px', fontSize: '12px' }}>
+                                <td style={{ padding: '12px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '150px' }}>
                                     {formatDate(p.checkedOutAt)}
                                 </td>
                                 {/* 체크아웃 메모 */}
-                                <td style={{ padding: '12px' }}>
+                                <td style={{ padding: '12px', minWidth: '150px', maxWidth: '150px' }}>
                                     {editingId === p.id && editingMemoType === 'checkout' ? (
-                                        <div style={{ display: 'flex', gap: '5px' }}>
+                                        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                                             <input
                                                 type="text"
                                                 value={editingMemo}
                                                 onChange={(e) => setEditingMemo(e.target.value)}
                                                 style={{
                                                     flex: 1,
+                                                    minWidth: '80px',
                                                     padding: '6px',
                                                     border: '1px solid #ddd',
                                                     borderRadius: '4px',
@@ -372,13 +415,14 @@ export default function StatusManagementPage() {
                                             <button
                                                 onClick={() => handleSaveMemo(p.id)}
                                                 style={{
-                                                    padding: '6px 12px',
+                                                    padding: '6px 8px',
                                                     backgroundColor: '#28a745',
                                                     color: 'white',
                                                     border: 'none',
                                                     borderRadius: '4px',
                                                     cursor: 'pointer',
-                                                    fontSize: '12px',
+                                                    fontSize: '11px',
+                                                    whiteSpace: 'nowrap',
                                                 }}
                                             >
                                                 저장
@@ -386,13 +430,14 @@ export default function StatusManagementPage() {
                                             <button
                                                 onClick={() => setEditingId(null)}
                                                 style={{
-                                                    padding: '6px 12px',
+                                                    padding: '6px 8px',
                                                     backgroundColor: '#6c757d',
                                                     color: 'white',
                                                     border: 'none',
                                                     borderRadius: '4px',
                                                     cursor: 'pointer',
-                                                    fontSize: '12px',
+                                                    fontSize: '11px',
+                                                    whiteSpace: 'nowrap',
                                                 }}
                                             >
                                                 취소
@@ -402,7 +447,7 @@ export default function StatusManagementPage() {
                                         <button
                                             onClick={() => startEditMemo(p.id, p.checkedOutMemo, 'checkout')}
                                             style={{
-                                                padding: '6px 12px',
+                                                padding: '6px 8px',
                                                 backgroundColor: p.checkedOutMemo ? '#e3f2fd' : '#e9ecef',
                                                 border: '1px solid #dee2e6',
                                                 borderRadius: '4px',
@@ -410,6 +455,10 @@ export default function StatusManagementPage() {
                                                 width: '100%',
                                                 textAlign: 'left',
                                                 fontWeight: p.checkedOutMemo ? '600' : '400',
+                                                fontSize: '12px',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
                                             }}
                                             title="클릭하여 메모 수정"
                                         >
@@ -417,7 +466,7 @@ export default function StatusManagementPage() {
                                         </button>
                                     )}
                                 </td>
-                                <td style={{ padding: '12px', textAlign: 'center' }}>
+                                <td style={{ padding: '12px', textAlign: 'center', minWidth: '80px', whiteSpace: 'nowrap' }}>
                                     <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', flexWrap: 'wrap' }}>
                                         <button
                                             onClick={() => handleToggleCheckin(p.id, p.isCheckedIn)}
