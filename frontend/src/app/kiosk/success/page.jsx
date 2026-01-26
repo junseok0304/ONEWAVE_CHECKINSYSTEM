@@ -9,6 +9,7 @@ export default function SuccessPage() {
     const [count, setCount] = useState(5);
     const audioRef = useRef(null);
     const hasPlayedRef = useRef(false);
+    const [showTouchModal, setShowTouchModal] = useState(true);
 
     // HTML audio 태그를 DOM에 추가하고 사용자 제스처로 재생
     useEffect(() => {
@@ -84,6 +85,32 @@ export default function SuccessPage() {
         };
     }, []);
 
+    // 터치 감지 및 모달 닫기
+    useEffect(() => {
+        const handleTouchOrClick = () => {
+            setShowTouchModal(false);
+            // 리스너 제거
+            document.removeEventListener('click', handleTouchOrClick);
+            document.removeEventListener('touchstart', handleTouchOrClick);
+        };
+
+        // 2.6초 후 모달 제거 (자동 페이드아웃)
+        const fadeOutTimer = setTimeout(() => {
+            setShowTouchModal(false);
+        }, 2600);
+
+        if (showTouchModal) {
+            document.addEventListener('click', handleTouchOrClick);
+            document.addEventListener('touchstart', handleTouchOrClick);
+        }
+
+        return () => {
+            clearTimeout(fadeOutTimer);
+            document.removeEventListener('click', handleTouchOrClick);
+            document.removeEventListener('touchstart', handleTouchOrClick);
+        };
+    }, [showTouchModal]);
+
     useEffect(() => {
         const interval = setInterval(() => {
             setCount((prev) => prev - 1);
@@ -101,7 +128,16 @@ export default function SuccessPage() {
     const progress = ((5 - count) / 5) * 100;
 
     return (
-        <div className={styles.container}>
+        <>
+            {showTouchModal && (
+                <div className={styles.touchModal}>
+                    <div className={styles.touchModalContent}>
+                        <div className={styles.touchIcon}>👆</div>
+                        <div className={styles.touchModalText}>화면을 터치해주세요!</div>
+                    </div>
+                </div>
+            )}
+            <div className={styles.container}>
             <div className={styles.content}>
                 <div className={styles.left}>
                     <div className={styles.leftText}>
@@ -159,5 +195,6 @@ export default function SuccessPage() {
                 </div>
             </div>
         </div>
+        </>
     );
 }
