@@ -14,6 +14,40 @@ export default function CheckinPage() {
     const [error, setError] = useState('');
     const timeoutRef = useRef(null);
 
+    // 음성 재생 (볼륨 페이드인) 함수
+    const playAudioWithFadeIn = async (audioSrc) => {
+        return new Promise((resolve) => {
+            // 50ms 후 음성 재생 시작
+            setTimeout(async () => {
+                const audio = new Audio();
+                audio.src = audioSrc;
+                audio.crossOrigin = 'anonymous';
+                audio.volume = 0; // 초기 볼륨 0
+
+                try {
+                    await audio.play();
+
+                    // 10ms마다 볼륨을 0.1씩 증가 (약 100ms에 최대 볼륨)
+                    let volume = 0;
+                    const fadeInInterval = setInterval(() => {
+                        volume += 0.1;
+                        audio.volume = Math.min(volume, 1);
+
+                        if (volume >= 1) {
+                            clearInterval(fadeInInterval);
+                        }
+                    }, 10);
+
+                    // 페이드인이 백그라운드에서 진행되도록 즉시 resolve
+                    resolve();
+                } catch (err) {
+                    // 오류 발생 시 그냥 진행
+                    resolve();
+                }
+            }, 50);
+        });
+    };
+
     // 타이머 리셋 함수
     const resetTimeout = () => {
         if (timeoutRef.current) {
@@ -130,6 +164,11 @@ export default function CheckinPage() {
             // 운영진인지 확인 (team_number === 0)
             const isStaff = selectedParticipant.team_number === 0 || selectedParticipant.team_number === '0';
 
+            // 음성 재생 시작 (볼륨 페이드인)
+            const audioSrc = isStaff ? '/correctAdmin.mp3' : '/correct.mp3';
+            await playAudioWithFadeIn(audioSrc);
+
+            // 음성 재생이 시작된 후 페이지 이동
             if (isStaff) {
                 router.push(`/kiosk/success-staff?name=${encodeURIComponent(selectedParticipant.name)}`);
             } else {
