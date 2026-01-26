@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     async headers() {
+        const isDevelopment = process.env.NODE_ENV === 'development';
+
         return [
             {
                 source: '/:path*',
@@ -27,7 +29,9 @@ const nextConfig = {
                     },
                     {
                         key: 'Content-Security-Policy',
-                        value: "upgrade-insecure-requests; default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval';"
+                        value: isDevelopment
+                            ? "default-src 'self' http://localhost:8080 https: data: 'unsafe-inline' 'unsafe-eval';"
+                            : "upgrade-insecure-requests; default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval';"
                     }
                 ],
             },

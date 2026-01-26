@@ -19,11 +19,13 @@ export default function KioskMainPage() {
                     <div className={styles.card}>
                         <div className={styles.icon}>
                             <img
-                                src="/favicon.ico"
+                                src="/onewavelogo.png"
                                 alt="ONEWAVE"
                                 style={{
-                                    width: '100%',
-                                    height: '100%',
+                                    maxWidth: '64px',
+                                    maxHeight: '64px',
+                                    width: 'auto',
+                                    height: 'auto',
                                     objectFit: 'contain'
                                 }}
                             />
