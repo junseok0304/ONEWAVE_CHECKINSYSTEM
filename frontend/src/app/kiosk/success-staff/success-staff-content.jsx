@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './success-staff.module.css';
 
@@ -9,6 +9,8 @@ export default function SuccessStaffContent() {
     const searchParams = useSearchParams();
     const [name, setName] = useState('');
     const [count, setCount] = useState(5);
+    const audioRef = useRef(null);
+    const hasPlayedRef = useRef(false);
 
     useEffect(() => {
         const nameParam = searchParams.get('name');
@@ -17,77 +19,76 @@ export default function SuccessStaffContent() {
         }
     }, [searchParams]);
 
-    // 페이지 마운트 시 오디오 재생 (운영진용 음성)
+    // HTML audio 태그를 DOM에 추가하고 사용자 제스처로 재생 (운영진용 음성)
     useEffect(() => {
-        let audioElement = null;
-        let played = false;
+        // audio 요소 생성 및 DOM에 추가
+        if (!audioRef.current) {
+            const audio = new Audio();
+            audio.src = '/correctAdmin.mp3';
+            audio.crossOrigin = 'anonymous';
+            audio.preload = 'auto';
+            audioRef.current = audio;
+        }
 
-        const playAudio = () => {
-            if (played) return;
+        const audio = audioRef.current;
+
+        const attemptPlay = async () => {
+            if (hasPlayedRef.current) return;
 
             try {
-                if (!audioElement) {
-                    audioElement = new Audio('/correctAdmin.mp3');
-                    audioElement.volume = 1;
-                    audioElement.crossOrigin = 'anonymous';
-                }
-
-                const playPromise = audioElement.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        played = true;
-                    }).catch(() => {
-                        // 실패 시 계속 재시도
-                    });
-                }
+                await audio.play();
+                hasPlayedRef.current = true;
             } catch (err) {
-                // 에러 무시
+                // 실패 시 사용자 제스처 대기
             }
         };
 
-        const simulateUserGesture = () => {
-            const touchEvent = new TouchEvent('touchstart', {
-                bubbles: true,
-                cancelable: true,
-                view: window,
-            });
-            document.documentElement.dispatchEvent(touchEvent);
-            playAudio();
+        // 방법 1: 즉시 시도 (최신 브라우저)
+        attemptPlay();
+
+        // 방법 2: 사용자 제스처 감지 시 즉시 재생 (Safari 구형 기기)
+        const handleUserGesture = async (e) => {
+            if (hasPlayedRef.current) return;
+
+            // 실제 사용자 인터랙션에서 호출됨
+            try {
+                await audio.play();
+                hasPlayedRef.current = true;
+                // 성공하면 리스너 제거
+                document.removeEventListener('click', handleUserGesture);
+                document.removeEventListener('touchstart', handleUserGesture);
+                document.removeEventListener('touchmove', handleUserGesture);
+            } catch (err) {
+                // 재시도
+            }
         };
 
-        // 즉시 재생 시도
-        playAudio();
+        // 여러 이벤트 등록 (어느 것이든 작동하도록)
+        document.addEventListener('click', handleUserGesture, { once: false });
+        document.addEventListener('touchstart', handleUserGesture, { once: false });
+        document.addEventListener('touchmove', handleUserGesture, { once: false });
 
-        // 매우 짧은 간격으로 여러 번 재생 시도 및 터치 이벤트 발생
-        const timers = [
-            setTimeout(playAudio, 30),
-            setTimeout(playAudio, 60),
-            setTimeout(simulateUserGesture, 50),
-            setTimeout(playAudio, 100),
-            setTimeout(simulateUserGesture, 120),
-            setTimeout(playAudio, 150),
-            setTimeout(simulateUserGesture, 180),
-            setTimeout(playAudio, 250),
-            setTimeout(simulateUserGesture, 300),
-        ];
-
-        // 사용자 제스처 감지 (실제 터치/클릭 시)
-        const handleUserGesture = () => {
-            playAudio();
-            document.removeEventListener('click', handleUserGesture);
-            document.removeEventListener('touchstart', handleUserGesture);
+        // 방법 3: 페이지 가시성 변경 시도 (일부 Safari 버전)
+        const handleVisibilityChange = async () => {
+            if (!document.hidden && !hasPlayedRef.current) {
+                try {
+                    await audio.play();
+                    hasPlayedRef.current = true;
+                } catch (err) {
+                    // 실패 무시
+                }
+            }
         };
 
-        document.addEventListener('click', handleUserGesture);
-        document.addEventListener('touchstart', handleUserGesture);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
-            timers.forEach(timer => clearTimeout(timer));
             document.removeEventListener('click', handleUserGesture);
             document.removeEventListener('touchstart', handleUserGesture);
-            if (audioElement) {
-                audioElement.pause();
-                audioElement.src = '';
+            document.removeEventListener('touchmove', handleUserGesture);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            if (audio) {
+                audio.pause();
             }
         };
     }, []);
