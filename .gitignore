@@ -35,3 +35,6 @@ yarn-error.log*
 
 # Local development
 .claude/
+
+# CI/CD 배포 가이드 (로컬에만 보관)
+claude_cicd.md
