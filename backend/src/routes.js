@@ -51,6 +51,10 @@ router.get('/members', verifyPassword, async (req, res) => {
             memo: docData.memo || '',
             email: docData.email || '',
             status: docData.status || 'APPROVED',
+            checked_in_status: docData.checked_in_status || false,
+            checkedInAt: formatTimestamp(docData.checkedInAt),
+            checkedOutAt: formatTimestamp(docData.checkedOutAt),
+            checkedOutMemo: docData.checkedOutMemo || '',
         };
     });
     res.json({ members: data });

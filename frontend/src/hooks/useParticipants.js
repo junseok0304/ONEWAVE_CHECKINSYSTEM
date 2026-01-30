@@ -42,11 +42,11 @@ export function useParticipants() {
                         part: admin.part || '',
                         phone_number: admin.phoneNumber,
                         status: admin.status || 'APPROVED',
-                        isCheckedIn: false,
-                        checkedInAt: null,
+                        isCheckedIn: admin.checked_in_status || false,
+                        checkedInAt: admin.checkedInAt,
                         memo: admin.memo || '',
-                        checkedOutAt: null,
-                        checkedOutMemo: '',
+                        checkedOutAt: admin.checkedOutAt,
+                        checkedOutMemo: admin.checkedOutMemo || '',
                         isAdmin: true, // 운영진 플래그
                     };
                     return converted;
