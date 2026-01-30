@@ -269,44 +269,6 @@ router.put('/participants/:participantId', verifyPassword, async (req, res) => {
 
         await db.collection(collection).doc(participantId).update(updateData);
 
-        // checkIn_{today}와 동기화
-        const today = getTodayString();
-        const checkInDoc = await db.collection(`checkIn_${today}`).doc(participantId).get();
-
-        if (checked_in_status !== undefined) {
-            if (checked_in_status && !checkInDoc.exists) {
-                // checked_in_status가 true로 변경되면 checkIn_{today}에 기록 생성
-                await db.collection(`checkIn_${today}`).doc(participantId).set({
-                    name: currentData.name,
-                    phoneNumber: currentData.phone,
-                    part: currentData.position || '',
-                    teamNumber: isAdmin ? 0 : (currentData.teamNumber || 1),
-                    isStaff: isAdmin,
-                    checkedInAt: new Date(),
-                });
-            } else if (!checked_in_status && checkInDoc.exists) {
-                // checked_in_status가 false로 변경되면 checkIn_{today}에서 제거
-                await db.collection(`checkIn_${today}`).doc(participantId).delete();
-            }
-        }
-
-        // 체크아웃 정보도 동기화
-        if ((checkedOutMemo !== undefined || checkedOutAt !== undefined) && checkInDoc.exists) {
-            const checkInUpdateData = {};
-
-            if (checkedOutMemo !== undefined) {
-                checkInUpdateData.checkedOutMemo = checkedOutMemo;
-            }
-
-            if (checkedOutAt !== undefined) {
-                checkInUpdateData.checkedOutAt = checkedOutAt ? new Date(checkedOutAt) : null;
-            }
-
-            if (Object.keys(checkInUpdateData).length > 0) {
-                await db.collection(`checkIn_${today}`).doc(participantId).update(checkInUpdateData);
-            }
-        }
-
         res.json({ success: true, participantId });
     } catch (error) {
         console.error('Update participant error:', error);

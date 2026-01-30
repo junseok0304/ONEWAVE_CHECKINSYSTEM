@@ -31,7 +31,7 @@ app.use(cors({
     }
 }));
 
-app.use(morgan('dev'));
+// app.use(morgan('dev')); // 로그 비활성화
 app.use('/api', router);
 
 const PORT = process.env.PORT || 8080;
