@@ -38,5 +38,5 @@ EXPOSE 8081 3000
 # 동시 실행을 위해 concurrently 설치
 RUN npm install -g concurrently
 
-# Backend와 Frontend 동시 실행
-CMD ["sh", "-c", "concurrently 'node backend/src/server.js' 'cd frontend && npm start'"]
+# Backend와 Frontend 동시 실행 (Frontend는 포트 3001 사용)
+CMD ["sh", "-c", "concurrently 'node backend/src/server.js' 'cd frontend && PORT=3001 npm start'"]
