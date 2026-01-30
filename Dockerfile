@@ -6,6 +6,8 @@ COPY backend/package*.json ./
 RUN npm install --production
 
 # Multi-stage build - Frontend
+ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8081/api
+
 FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app/frontend
@@ -14,9 +16,8 @@ RUN npm install
 
 COPY frontend/ .
 
-# .env.production 파일이 있으면 사용하기 위해 빌드 시 포함
-COPY frontend/.env.production .env.production 2>/dev/null || true
-
+# 빌드 시 환경 변수 설정
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 RUN npm run build
 
 # Production image

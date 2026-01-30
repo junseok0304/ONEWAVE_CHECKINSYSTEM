@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_BASE_URL=https://checkin.omong.kr:8081/api
     container_name: qrcheckin-backend
     ports:
       - "8081:8081"
