@@ -97,14 +97,6 @@ router.get('/search', async (req, res) => {
 
     try {
         const results = [];
-        const today = getTodayString();
-        const checkInSnapshot = await db.collection(`checkIn_${today}`).get();
-        const checkedInIds = new Set();
-
-        // 오늘 이미 체크인한 사용자 ID 수집
-        checkInSnapshot.forEach(doc => {
-            checkedInIds.add(doc.id);
-        });
 
         // 1. participants_checkin에서 검색 (일반 참가자)
         const checkinSnapshot = await db.collection('participants_checkin').get();
@@ -117,7 +109,7 @@ router.get('/search', async (req, res) => {
                     email: data.email,
                     name: data.name,
                     phone_number: data.phone,
-                    checked_in_status: checkedInIds.has(doc.id),
+                    checked_in_status: data.checked_in_status || false,
                     team_number: data.teamNumber,
                     status: data.status || 'REJECTED',
                 });
@@ -135,7 +127,7 @@ router.get('/search', async (req, res) => {
                     email: data.email || '',
                     name: data.name,
                     phone_number: data.phone,
-                    checked_in_status: checkedInIds.has(doc.id),
+                    checked_in_status: data.checked_in_status || false,
                     team_number: 0,
                     status: data.status || 'APPROVED',
                 });
@@ -163,28 +155,17 @@ router.post('/checkin', async (req, res) => {
     }
 
     try {
-        const today = getTodayString();
-
-        // 이미 체크인했는지 확인
-        const checkInDoc = await db.collection(`checkIn_${today}`).doc(phoneKey).get();
-        if (checkInDoc.exists) {
-            return res.status(409).json({ message: '이미 체크인됨' });
-        }
-
         // 1. 운영진 확인 (participants_admin)
         const adminDoc = await db.collection('participants_admin').doc(phoneKey).get();
         if (adminDoc.exists) {
             const adminData = adminDoc.data();
-            await db.collection(`checkIn_${today}`).doc(phoneKey).set({
-                name: adminData.name,
-                phoneNumber: adminData.phone,
-                part: adminData.position || '',
-                teamNumber: 0,
-                isStaff: true,
-                checkedInAt: new Date(),
-            });
 
-            // participants_admin의 checked_in_status도 업데이트
+            // 이미 체크인했는지 확인
+            if (adminData.checked_in_status) {
+                return res.status(409).json({ message: '이미 체크인됨' });
+            }
+
+            // 운영진 체크인 처리
             await db.collection('participants_admin').doc(phoneKey).update({
                 checked_in_status: true,
                 checkedInAt: new Date(),
@@ -211,17 +192,7 @@ router.post('/checkin', async (req, res) => {
             return res.status(409).json({ message: '이미 체크인됨' });
         }
 
-        // 3. 체크인 기록 저장
-        await db.collection(`checkIn_${today}`).doc(phoneKey).set({
-            name: participantData.name,
-            phoneNumber: participantData.phone,
-            part: participantData.position || '',
-            teamNumber: participantData.teamNumber || 1,
-            isStaff: false,
-            checkedInAt: new Date(),
-        });
-
-        // 4. participants_checkin의 checked_in_status도 업데이트
+        // 3. 참가자 체크인 처리
         await db.collection('participants_checkin').doc(phoneKey).update({
             checked_in_status: true,
             checkedInAt: new Date(),
