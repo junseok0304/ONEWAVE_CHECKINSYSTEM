@@ -48,6 +48,10 @@ export default function StatusManagementPage() {
     const [editingMemo, setEditingMemo] = useState('');
     const [editingMemoType, setEditingMemoType] = useState(null); // 'participant' or 'checkout'
 
+    // Discord 동기화
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [syncMessage, setSyncMessage] = useState('');
+
     /**
      * 필터링 및 정렬된 참가자 목록
      */
@@ -141,6 +145,52 @@ export default function StatusManagementPage() {
             alert(err.message || '처리에 실패했습니다.');
         }
     }, [toggleCheckout]);
+
+    /**
+     * Discord 동기화
+     */
+    const handleSyncDiscord = useCallback(async () => {
+        if (!window.confirm('Discord 데이터를 기반으로 동기화하시겠습니까?\n(없어진 데이터는 삭제, 추가된 데이터는 추가됩니다)')) {
+            return;
+        }
+
+        setIsSyncing(true);
+        setSyncMessage('');
+
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/sync-discord`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_MASTER_PASSWORD}`,
+                },
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || '동기화 실패');
+            }
+
+            const data = await res.json();
+            setSyncMessage(
+                `✅ 동기화 완료!\n` +
+                `추가: ${data.stats.added}명\n` +
+                `수정: ${data.stats.updated}명\n` +
+                `삭제: ${data.stats.deleted}명\n` +
+                `총: ${data.stats.total}명`
+            );
+
+            // 3초 후 목록 새로고침
+            setTimeout(() => {
+                refreshParticipants();
+                setSyncMessage('');
+            }, 3000);
+        } catch (err) {
+            setSyncMessage(`❌ ${err.message}`);
+        } finally {
+            setIsSyncing(false);
+        }
+    }, [refreshParticipants]);
 
     if (isLoading) return <div style={{ padding: '20px' }}>로딩 중...</div>;
 
@@ -539,6 +589,60 @@ export default function StatusManagementPage() {
                     해당하는 참가자가 없습니다.
                 </div>
             )}
+
+            {/* Discord 동기화 섹션 */}
+            <div style={{
+                borderTop: '2px solid #e9ecef',
+                marginTop: '40px',
+                padding: '20px 0',
+            }}>
+                <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}>
+                    <button
+                        onClick={handleSyncDiscord}
+                        disabled={isSyncing}
+                        style={{
+                            padding: '10px 20px',
+                            backgroundColor: isSyncing ? '#ccc' : '#007bff',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: isSyncing ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            minWidth: '200px',
+                        }}
+                    >
+                        {isSyncing ? '동기화 중...' : '🔄 Discord 동기화'}
+                    </button>
+
+                    {syncMessage && (
+                        <div style={{
+                            padding: '10px 15px',
+                            backgroundColor: syncMessage.includes('❌') ? '#f8d7da' : '#d4edda',
+                            color: syncMessage.includes('❌') ? '#721c24' : '#155724',
+                            borderRadius: '4px',
+                            whiteSpace: 'pre-line',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                        }}>
+                            {syncMessage}
+                        </div>
+                    )}
+                </div>
+                <div style={{
+                    textAlign: 'center',
+                    marginTop: '10px',
+                    fontSize: '12px',
+                    color: '#666',
+                }}>
+                    Discord 데이터를 기반으로 참가자 목록을 동기화합니다.
+                </div>
+            </div>
         </div>
     );
 }

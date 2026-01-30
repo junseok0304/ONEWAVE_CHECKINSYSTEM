@@ -396,4 +396,100 @@ router.get('/realtime/checkin', verifyPassword, async (req, res) => {
     }
 });
 
+// Discord 참가자 동기화 (participants_discord → participants_checkin)
+router.post('/sync-discord', verifyPassword, async (req, res) => {
+    try {
+        console.log('🔍 Discord 데이터 동기화 시작');
+
+        // 1. participants_discord에서 모든 데이터 조회
+        const discordSnapshot = await db.collection('participants_discord').get();
+        const discordUsers = [];
+
+        discordSnapshot.forEach(doc => {
+            const data = doc.data();
+            // CANCELED 상태인 사용자는 제외
+            if (data.status !== 'CANCELED') {
+                discordUsers.push({ id: doc.id, ...data });
+            }
+        });
+
+        console.log(`✅ Discord 참가자 ${discordUsers.length}명 발견 (CANCELED 제외)`);
+
+        let addedCount = 0;
+        let updatedCount = 0;
+
+        // 2. participants_checkin에 동기화
+        for (const discordUser of discordUsers) {
+            const phoneKey = (discordUser.phone || discordUser.phoneNumber || '')
+                .replace(/-/g, '')
+                .slice(-11);
+
+            if (!phoneKey || phoneKey.length < 11) {
+                console.log(`⚠️  ${discordUser.name}: 유효한 전화번호 없음`);
+                continue;
+            }
+
+            const updateData = {
+                name: discordUser.name || '',
+                email: discordUser.email || '',
+                phone: discordUser.phone || discordUser.phoneNumber || '',
+                position: discordUser.position || discordUser.part || '',
+                school: discordUser.school || discordUser.schoolName || '',
+                teamNumber: discordUser.teamNumber || 1,
+                status: discordUser.status || 'APPROVED',
+                memo: discordUser.memo || '',
+                checked_in_status: false,
+                updatedAt: new Date(),
+            };
+
+            const existingDoc = await db.collection('participants_checkin').doc(phoneKey).get();
+
+            if (existingDoc.exists) {
+                await db.collection('participants_checkin').doc(phoneKey).update(updateData);
+                updatedCount++;
+            } else {
+                await db.collection('participants_checkin').doc(phoneKey).set({
+                    ...updateData,
+                    createdAt: new Date(),
+                });
+                addedCount++;
+            }
+        }
+
+        // 3. participants_discord에 있지만 participants_checkin에 없는 데이터 삭제
+        const checkinSnapshot = await db.collection('participants_checkin').get();
+        let deletedCount = 0;
+
+        for (const doc of checkinSnapshot.docs) {
+            const phoneKey = doc.id;
+            // Discord에 없는 데이터면 삭제
+            const inDiscord = discordUsers.some(u => {
+                const uPhoneKey = (u.phone || u.phoneNumber || '')
+                    .replace(/-/g, '')
+                    .slice(-11);
+                return uPhoneKey === phoneKey;
+            });
+
+            if (!inDiscord) {
+                await db.collection('participants_checkin').doc(phoneKey).delete();
+                deletedCount++;
+            }
+        }
+
+        res.json({
+            success: true,
+            message: 'Discord 동기화 완료',
+            stats: {
+                added: addedCount,
+                updated: updatedCount,
+                deleted: deletedCount,
+                total: discordUsers.length,
+            },
+        });
+    } catch (error) {
+        console.error('Discord sync error:', error);
+        res.status(500).json({ message: 'Discord 동기화 중 오류가 발생했습니다.' });
+    }
+});
+
 export default router;
