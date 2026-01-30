@@ -31,6 +31,25 @@ const getPhoneLast4 = (phone) => {
     return phone.replace(/-/g, '').slice(-4);
 };
 
+// 운영진 조회 (관리자용)
+router.get('/members', verifyPassword, async (req, res) => {
+    const snapshot = await db.collection('participants_admin').get();
+    const data = snapshot.docs.map(doc => {
+        const docData = doc.data();
+        return {
+            phoneKey: doc.id,
+            name: docData.name,
+            phoneNumber: docData.phone,
+            part: docData.position || '',
+            school: docData.school || '',
+            memo: docData.memo || '',
+            email: docData.email || '',
+            status: docData.status || 'APPROVED',
+        };
+    });
+    res.json({ members: data });
+});
+
 // 참가자 조회 (관리자용)
 router.get('/participants', verifyPassword, async (req, res) => {
     const snapshot = await db.collection('participants_checkin').get();
@@ -169,6 +188,126 @@ router.put('/participants/:participantId', verifyPassword, async (req, res) => {
     await db.collection('participants_checkin').doc(participantId).update(updateData);
 
     res.json({ success: true, participantId });
+});
+
+// 대시보드 통계
+router.get('/dashboard/stats', verifyPassword, async (req, res) => {
+    try {
+        const today = getTodayString();
+
+        // 1. 오늘의 이벤트 조회
+        const eventDoc = await db.collection('events').doc(today).get();
+
+        if (!eventDoc.exists) {
+            return res.json({
+                stats: {
+                    eventName: null,
+                    eventType: null,
+                    totalParticipants: 0,
+                    todayCheckInCount: 0,
+                    todayCheckInPercentage: 0,
+                },
+            });
+        }
+
+        const eventData = eventDoc.data();
+
+        // 2. 오늘의 체크인 기록 조회
+        const checkInSnapshot = await db.collection(`checkIn_${today}`).get();
+        const todayCheckInCount = checkInSnapshot.size;
+
+        // 3. 통계 계산
+        const totalParticipants = eventData.participants.length;
+        const todayCheckInPercentage = totalParticipants > 0
+            ? Math.round((todayCheckInCount / totalParticipants) * 100)
+            : 0;
+
+        res.json({
+            stats: {
+                eventName: eventData.eventName,
+                eventType: eventData.eventType,
+                totalParticipants,
+                todayCheckInCount,
+                todayCheckInPercentage,
+            },
+        });
+    } catch (error) {
+        console.error('Dashboard stats error:', error);
+        res.status(500).json({ message: '통계 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+// 실시간 체크인 현황 조회
+router.get('/realtime/checkin', verifyPassword, async (req, res) => {
+    try {
+        const today = getTodayString();
+
+        // 1. 오늘의 이벤트 조회
+        const eventDoc = await db.collection('events').doc(today).get();
+        if (!eventDoc.exists) {
+            return res.status(404).json({ message: '오늘 예정된 이벤트가 없습니다.' });
+        }
+
+        const eventData = eventDoc.data();
+
+        // 2. 오늘의 체크인 기록 조회
+        const checkInSnapshot = await db.collection(`checkIn_${today}`).get();
+        const checkedInUsers = [];
+        const checkedInIds = new Set();
+
+        checkInSnapshot.forEach(doc => {
+            const data = doc.data();
+            checkedInUsers.push({
+                phoneKey: doc.id,
+                phoneNumber: data.phoneNumber,
+                name: data.name,
+                part: data.part || '',
+                checkedInAt: formatTimestamp(data.checkedInAt),
+            });
+            checkedInIds.add(doc.id);
+        });
+
+        // 3. 미체크인 사용자 조회
+        const notCheckedInUsers = [];
+        for (const phoneKey of eventData.participants) {
+            if (!checkedInIds.has(phoneKey)) {
+                const userDoc = await db.collection('dommy').doc(phoneKey).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    notCheckedInUsers.push({
+                        phoneKey,
+                        phoneNumber: userData.phoneNumber,
+                        name: userData.name,
+                        part: userData.part || '',
+                    });
+                }
+            }
+        }
+
+        // 4. 통계 계산
+        const totalCount = eventData.participants.length;
+        const checkedInCount = checkedInUsers.length;
+        const checkInRate = totalCount > 0 ? Math.round((checkedInCount / totalCount) * 100) : 0;
+
+        res.json({
+            success: true,
+            data: {
+                event: eventData,
+                stats: {
+                    eventName: eventData.eventName,
+                    eventType: eventData.eventType,
+                    checkedInCount,
+                    totalCount,
+                    checkInRate,
+                },
+                checkedIn: checkedInUsers,
+                notCheckedIn: notCheckedInUsers,
+            },
+        });
+    } catch (error) {
+        console.error('Realtime checkin error:', error);
+        res.status(500).json({ message: '실시간 현황 조회 중 오류가 발생했습니다.' });
+    }
 });
 
 export default router;
