@@ -13,6 +13,10 @@ COPY frontend/package*.json ./
 RUN npm install
 
 COPY frontend/ .
+
+# .env.production 파일이 있으면 사용하기 위해 빌드 시 포함
+COPY frontend/.env.production .env.production 2>/dev/null || true
+
 RUN npm run build
 
 # Production image
