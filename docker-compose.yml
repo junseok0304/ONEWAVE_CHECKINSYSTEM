@@ -10,7 +10,7 @@ services:
     container_name: qrcheckin-backend
     ports:
       - "8081:8081"
-      - "3000:3001"
+      - "3001:3001"
     env_file:
       - /home/ubuntu/qrcheckin/.env.production
     environment:
