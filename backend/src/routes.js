@@ -179,6 +179,13 @@ router.post('/checkin', async (req, res) => {
                 checkedInAt: new Date(),
             });
 
+            // participants_admin의 checked_in_status도 업데이트
+            await db.collection('participants_admin').doc(phoneKey).update({
+                checked_in_status: true,
+                checkedInAt: new Date(),
+                updatedAt: new Date(),
+            });
+
             return res.json({
                 success: true,
                 phoneKey,

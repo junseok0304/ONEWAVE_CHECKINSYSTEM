@@ -314,7 +314,7 @@ export default function StatusManagementPage() {
                                         )}
                                     </div>
                                 </td>
-                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '50px' }}>{p.team_number || '-'}</td>
+                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '50px' }}>{p.team_number === 0 ? '0' : (p.team_number || '-')}</td>
                                 <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '60px' }}>{p.part || '-'}</td>
                                 <td style={{ padding: '12px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '120px' }}>
                                     {formatPhoneNumber(p.phone_number)}
