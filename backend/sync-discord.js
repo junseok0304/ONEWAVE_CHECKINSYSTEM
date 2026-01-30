@@ -40,7 +40,16 @@ async function syncDiscordData() {
 
         console.log('\n📝 participants_checkin에 데이터 동기화 중...');
 
+        let skippedCount = 0;
+
         for (const discordUser of discordUsers) {
+            // CANCELED 상태인 사용자는 스킵
+            if (discordUser.status === 'CANCELED') {
+                console.log(`  ⏭️  ${discordUser.name}: CANCELED 상태 (스킵)`);
+                skippedCount++;
+                continue;
+            }
+
             // 전화번호로부터 phoneKey 생성 (뒷 11자리)
             const phoneKey = (discordUser.phone || discordUser.phoneNumber || '')
                 .replace(/-/g, '')
@@ -48,6 +57,7 @@ async function syncDiscordData() {
 
             if (!phoneKey || phoneKey.length < 11) {
                 console.log(`  ⚠️  ${discordUser.name}: 유효한 전화번호 없음 (스킵)`);
+                skippedCount++;
                 continue;
             }
 
@@ -82,7 +92,9 @@ async function syncDiscordData() {
         }
 
         console.log('\n✅ Discord 동기화 완료!');
-        console.log(`   - participants_checkin에 ${discordUsers.length}명 동기화`);
+        console.log(`   - 전체: ${discordUsers.length}명`);
+        console.log(`   - 동기화됨: ${discordUsers.length - skippedCount}명`);
+        console.log(`   - 스킵됨: ${skippedCount}명`);
 
         process.exit(0);
     } catch (error) {
