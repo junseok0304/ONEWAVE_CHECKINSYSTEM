@@ -112,7 +112,7 @@ router.get('/search', async (req, res) => {
                     email: data.email,
                     name: data.name,
                     phone_number: data.phone,
-                    checked_in_status: data.checked_in_status || checkedInIds.has(doc.id),
+                    checked_in_status: checkedInIds.has(doc.id),
                     team_number: data.teamNumber,
                     status: data.status || 'REJECTED',
                 });
