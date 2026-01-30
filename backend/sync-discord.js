@@ -59,7 +59,6 @@ async function syncDiscordData() {
                 school: discordUser.school || discordUser.schoolName || '',
                 teamNumber: discordUser.teamNumber || 1,
                 status: discordUser.status || 'APPROVED',
-                types: discordUser.types || ['allMembers'],
                 memo: discordUser.memo || '',
                 checked_in_status: false,
                 updatedAt: new Date(),

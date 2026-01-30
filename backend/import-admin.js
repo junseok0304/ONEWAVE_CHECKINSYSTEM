@@ -116,7 +116,6 @@ async function importAdminFromTSV() {
                     school: adminUser.schoolName,
                     teamNumber: adminUser.teamNumber,
                     status: 'APPROVED',
-                    types: ['allMembers'],
                     memo: '',
                     updatedAt: new Date(),
                 };
