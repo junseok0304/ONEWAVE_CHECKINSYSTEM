@@ -9,16 +9,13 @@ services:
     ports:
       - "8081:8081"
       - "3000:3000"
+    env_file:
+      - /home/ubuntu/qrcheckin/.env.production
     environment:
       - NODE_ENV=production
       - PORT=8081
-      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
-      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
-      - MASTER_PASSWORD=${MASTER_PASSWORD}
-      - KIOSK_PASSWORD=${KIOSK_PASSWORD}
-      - CORS_ORIGIN=${CORS_ORIGIN}
     volumes:
-      - ${GOOGLE_APPLICATION_CREDENTIALS}:${GOOGLE_APPLICATION_CREDENTIALS}:ro
+      - /home/ubuntu/qrcheckin/firebase-admin.json:/home/ubuntu/qrcheckin/firebase-admin.json:ro
     restart: unless-stopped
     networks:
       - qrcheckin-network
