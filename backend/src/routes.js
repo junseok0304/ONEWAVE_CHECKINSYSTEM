@@ -25,6 +25,12 @@ const formatTimestamp = (timestamp) => {
     }
 };
 
+// 오늘 날짜를 YYYY-MM-DD 형식으로 반환
+const getTodayString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+};
+
 // 휴대폰 번호에서 끝 4자리 추출 (010-2140-7614 → 7614)
 const getPhoneLast4 = (phone) => {
     if (!phone) return '';
@@ -215,6 +221,7 @@ router.post('/checkin', async (req, res) => {
 });
 
 // 참가자 정보 수정 (메모, 체크인 상태 등)
+// 참가자/운영진 정보 수정 (메모, 체크인 상태 등)
 router.put('/participants/:participantId', verifyPassword, async (req, res) => {
     const { participantId } = req.params;
     const { memo, checked_in_status, checkedOutAt, checkedOutMemo } = req.body;
@@ -223,43 +230,64 @@ router.put('/participants/:participantId', verifyPassword, async (req, res) => {
         return res.status(400).json({ message: '참가자 ID가 필요합니다.' });
     }
 
-    const doc = await db.collection('participants_checkin').doc(participantId).get();
+    try {
+        // 1. 일반 참가자 검색
+        let doc = await db.collection('participants_checkin').doc(participantId).get();
+        let collection = 'participants_checkin';
+        let isAdmin = false;
 
-    if (!doc.exists) {
-        return res.status(404).json({ message: '참가자를 찾을 수 없습니다.' });
-    }
-
-    const updateData = { updatedAt: new Date() };
-    const currentData = doc.data();
-
-    if (memo !== undefined) {
-        updateData.memo = memo;
-    }
-
-    if (checked_in_status !== undefined) {
-        updateData.checked_in_status = checked_in_status;
-        if (checked_in_status && !currentData.checked_in_status) {
-            updateData.checkedInAt = new Date();
-        } else if (!checked_in_status && currentData.checked_in_status) {
-            updateData.checkedInAt = null;
+        // 2. 없으면 운영진 검색
+        if (!doc.exists) {
+            doc = await db.collection('participants_admin').doc(participantId).get();
+            collection = 'participants_admin';
+            isAdmin = true;
         }
-    }
 
-    if (checkedOutMemo !== undefined) {
-        updateData.checkedOutMemo = checkedOutMemo;
-        // 체크아웃 메모를 작성하면 현재 시간으로 체크아웃 처리
-        if (checkedOutMemo && !currentData.checkedOutAt) {
-            updateData.checkedOutAt = new Date();
+        // 3. 둘 다 없으면 에러
+        if (!doc.exists) {
+            return res.status(404).json({ message: '참가자를 찾을 수 없습니다.' });
         }
+
+        const updateData = { updatedAt: new Date() };
+        const currentData = doc.data();
+
+        // 운영진은 checked_in_status, checkedOutAt, checkedOutMemo 업데이트 불가능
+        if (isAdmin && (checked_in_status !== undefined || checkedOutAt !== undefined || checkedOutMemo !== undefined)) {
+            return res.status(400).json({ message: '운영진은 체크인 상태를 수정할 수 없습니다.' });
+        }
+
+        if (memo !== undefined) {
+            updateData.memo = memo;
+        }
+
+        if (checked_in_status !== undefined) {
+            updateData.checked_in_status = checked_in_status;
+            if (checked_in_status && !currentData.checked_in_status) {
+                updateData.checkedInAt = new Date();
+            } else if (!checked_in_status && currentData.checked_in_status) {
+                updateData.checkedInAt = null;
+            }
+        }
+
+        if (checkedOutMemo !== undefined) {
+            updateData.checkedOutMemo = checkedOutMemo;
+            // 체크아웃 메모를 작성하면 현재 시간으로 체크아웃 처리
+            if (checkedOutMemo && !currentData.checkedOutAt) {
+                updateData.checkedOutAt = new Date();
+            }
+        }
+
+        if (checkedOutAt !== undefined) {
+            updateData.checkedOutAt = checkedOutAt ? new Date(checkedOutAt) : null;
+        }
+
+        await db.collection(collection).doc(participantId).update(updateData);
+
+        res.json({ success: true, participantId });
+    } catch (error) {
+        console.error('Update participant error:', error);
+        res.status(500).json({ message: '참가자 정보 수정 중 오류가 발생했습니다.' });
     }
-
-    if (checkedOutAt !== undefined) {
-        updateData.checkedOutAt = checkedOutAt ? new Date(checkedOutAt) : null;
-    }
-
-    await db.collection('participants_checkin').doc(participantId).update(updateData);
-
-    res.json({ success: true, participantId });
 });
 
 // 대시보드 통계
