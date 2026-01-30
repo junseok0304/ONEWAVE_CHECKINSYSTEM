@@ -3,40 +3,31 @@ version: '3.8'
 services:
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     container_name: qrcheckin-backend
-    restart: always
     ports:
-      - "8081:8080"
+      - "8081:8081"
+      - "3000:3000"
     environment:
       - NODE_ENV=production
+      - PORT=8081
       - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
-      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
-      - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
       - MASTER_PASSWORD=${MASTER_PASSWORD}
       - KIOSK_PASSWORD=${KIOSK_PASSWORD}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     volumes:
-      - ./backend/src:/app/src
+      - ${GOOGLE_APPLICATION_CREDENTIALS}:${GOOGLE_APPLICATION_CREDENTIALS}:ro
+    restart: unless-stopped
     networks:
       - qrcheckin-network
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_API_BASE_URL=/api
-        - NEXT_PUBLIC_MASTER_PASSWORD=${NEXT_PUBLIC_MASTER_PASSWORD}
-        - NEXT_PUBLIC_KIOSK_PASSWORD=${NEXT_PUBLIC_KIOSK_PASSWORD}
-    container_name: qrcheckin-frontend
-    restart: always
-    ports:
-      - "3001:3000"
-    depends_on:
-      - backend
-    networks:
-      - qrcheckin-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8081', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
 
 networks:
   qrcheckin-network:

@@ -1,0 +1,39 @@
+# Multi-stage build - Backend
+FROM node:20-alpine AS backend-builder
+
+WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm ci --only=production
+
+# Multi-stage build - Frontend
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+
+COPY frontend/ .
+RUN npm run build
+
+# Production image
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Backend 설정
+COPY --from=backend-builder /app/backend/node_modules /app/backend/node_modules
+COPY backend /app/backend
+
+# Frontend 빌드 결과 (필요시)
+COPY --from=frontend-builder /app/frontend/.next /app/frontend/.next
+COPY --from=frontend-builder /app/frontend/node_modules /app/frontend/node_modules
+COPY frontend/package*.json /app/frontend/
+
+# 헬스 체크
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:8081', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+
+EXPOSE 8081 3000
+
+# Backend 시작
+CMD ["node", "backend/src/server.js"]

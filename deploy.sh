@@ -1,128 +1,99 @@
 #!/bin/bash
 
 # 배포 스크립트
-# 사용법: ./deploy.sh [명령어]
-# 명령어: build, start, stop, restart, logs, update, clean
+# 사용법: ./deploy.sh [환경] [호스트]
+# 예: ./deploy.sh production omong-public
 
 set -e
 
-PROJECT_DIR="/opt/qrcheckin"
-REPO_URL="<your-git-repo-url>"
-BRANCH="main"
+ENVIRONMENT=${1:-production}
+HOST=${2:-omong-public}
+PROJECT_NAME="qrcheckin"
+DEPLOY_PATH="/opt/qrcheckin"
 
-# 색상 정의
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+echo "🚀 Docker 배포 시작"
+echo "환경: $ENVIRONMENT"
+echo "호스트: $HOST"
+echo "=================="
 
-# 함수 정의
-log_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
-}
+# 1. 현재 변경사항 커밋 확인
+echo "✓ Git 상태 확인..."
+if [[ -n $(git status -s) ]]; then
+    echo "❌ 변경사항이 있습니다. 먼저 커밋해주세요."
+    git status
+    exit 1
+fi
 
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
+# 2. 최신 코드 푸시
+echo "📤 코드를 원격 저장소에 푸시..."
+git push origin main
 
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
+# 3. 원격 서버에 배포
+echo "🔗 원격 서버에 연결 중..."
 
-# 프로젝트 디렉토리로 이동
-cd "$PROJECT_DIR" || exit 1
+ssh $HOST << DEPLOY_SCRIPT
+set -e
 
-case "$1" in
-    build)
-        log_info "이미지 빌드 중..."
-        docker-compose build
-        log_info "빌드 완료"
-        ;;
-    start)
-        log_info "서비스 시작 중..."
-        docker-compose up -d
-        log_info "서비스 시작 완료"
-        log_info "상태 확인 중..."
-        sleep 5
-        docker-compose ps
-        ;;
-    stop)
-        log_info "서비스 중지 중..."
-        docker-compose down
-        log_info "서비스 중지 완료"
-        ;;
-    restart)
-        log_info "서비스 재시작 중..."
-        docker-compose restart
-        log_info "서비스 재시작 완료"
-        ;;
-    logs)
-        log_info "로그 출력 중... (Ctrl+C로 중단)"
-        docker-compose logs -f
-        ;;
-    logs-backend)
-        log_info "백엔드 로그 출력 중... (Ctrl+C로 중단)"
-        docker-compose logs -f backend
-        ;;
-    logs-frontend)
-        log_info "프론트엔드 로그 출력 중... (Ctrl+C로 중단)"
-        docker-compose logs -f frontend
-        ;;
-    update)
-        log_info "최신 코드 가져오는 중..."
-        git pull origin "$BRANCH"
-        log_info "이미지 빌드 중..."
-        docker-compose build
-        log_info "서비스 재시작 중..."
-        docker-compose up -d
-        log_info "업데이트 완료"
-        log_info "상태 확인 중..."
-        sleep 5
-        docker-compose ps
-        ;;
-    clean)
-        log_warn "사용하지 않는 Docker 리소스 정리 중..."
-        read -p "정말 진행하시겠습니까? (y/n) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            docker system prune -a
-            log_info "정리 완료"
-        else
-            log_info "취소됨"
-        fi
-        ;;
-    status)
-        log_info "서비스 상태:"
-        docker-compose ps
-        log_info ""
-        log_info "디스크 사용량:"
-        df -h "$PROJECT_DIR"
-        ;;
-    backup)
-        log_info "데이터 백업 중..."
-        BACKUP_DIR="./backups/$(date +%Y%m%d_%H%M%S)"
-        mkdir -p "$BACKUP_DIR"
-        cp .env "$BACKUP_DIR/"
-        log_info "백업 완료: $BACKUP_DIR"
-        ;;
-    *)
-        echo "QR Checkin 배포 스크립트"
-        echo ""
-        echo "사용법: $0 [명령어]"
-        echo ""
-        echo "명령어:"
-        echo "  build              - Docker 이미지 빌드"
-        echo "  start              - 서비스 시작"
-        echo "  stop               - 서비스 중지"
-        echo "  restart            - 서비스 재시작"
-        echo "  logs               - 모든 로그 출력"
-        echo "  logs-backend       - 백엔드 로그만 출력"
-        echo "  logs-frontend      - 프론트엔드 로그만 출력"
-        echo "  update             - 코드 업데이트 및 재배포"
-        echo "  clean              - Docker 리소스 정리"
-        echo "  status             - 서비스 상태 확인"
-        echo "  backup             - 설정 백업"
-        echo ""
-        exit 1
-        ;;
-esac
+echo "📁 배포 디렉토리 생성..."
+mkdir -p $DEPLOY_PATH
+cd $DEPLOY_PATH
+
+echo "📥 최신 코드 다운로드..."
+if [ -d ".git" ]; then
+    git fetch origin
+    git reset --hard origin/main
+else
+    git clone $(git -C /Users/junseok/Desktop/project/$PROJECT_NAME remote get-url origin) .
+fi
+
+echo "🔐 환경 변수 파일 설정..."
+if [ ! -f ".env.production" ]; then
+    echo "❌ .env.production 파일이 없습니다."
+    echo "원격 서버에서 다음 파일을 생성해주세요: $DEPLOY_PATH/.env.production"
+    echo ""
+    echo "필요한 환경 변수:"
+    cat << 'ENV'
+FIREBASE_PROJECT_ID=your-project-id
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/firebase-admin.json
+MASTER_PASSWORD=your-password
+KIOSK_PASSWORD=your-password
+CORS_ORIGIN=https://checkin.omong.kr
+NODE_ENV=production
+ENV
+    exit 1
+fi
+
+echo "🐳 Docker 컨테이너 중지 및 제거..."
+docker-compose down || true
+
+echo "🔨 Docker 이미지 빌드..."
+docker-compose build --no-cache
+
+echo "🚀 Docker 컨테이너 시작..."
+docker-compose up -d
+
+echo "⏳ 서비스 헬스 체크..."
+sleep 10
+
+if docker-compose ps | grep -q "healthy"; then
+    echo "✅ 배포 완료!"
+    echo ""
+    echo "서비스 상태:"
+    docker-compose ps
+else
+    echo "⚠️  서비스가 시작되지 않았습니다. 로그 확인:"
+    docker-compose logs
+    exit 1
+fi
+
+DEPLOY_SCRIPT
+
+echo ""
+echo "✅ 배포가 완료되었습니다!"
+echo "📍 서비스 URL:"
+echo "   - Backend API: http://omong-public:8081/api"
+echo "   - Frontend: http://omong-public:3000"
+echo ""
+echo "📊 로그 확인:"
+echo "   ssh omong-public 'cd /opt/qrcheckin && docker-compose logs -f'"
+
