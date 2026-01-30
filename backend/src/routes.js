@@ -92,6 +92,14 @@ router.get('/search', async (req, res) => {
 
     try {
         const results = [];
+        const today = getTodayString();
+        const checkInSnapshot = await db.collection(`checkIn_${today}`).get();
+        const checkedInIds = new Set();
+
+        // 오늘 이미 체크인한 사용자 ID 수집
+        checkInSnapshot.forEach(doc => {
+            checkedInIds.add(doc.id);
+        });
 
         // 1. participants_checkin에서 검색 (일반 참가자)
         const checkinSnapshot = await db.collection('participants_checkin').get();
@@ -104,7 +112,7 @@ router.get('/search', async (req, res) => {
                     email: data.email,
                     name: data.name,
                     phone_number: data.phone,
-                    checked_in_status: data.checked_in_status,
+                    checked_in_status: data.checked_in_status || checkedInIds.has(doc.id),
                     team_number: data.teamNumber,
                     status: data.status || 'REJECTED',
                 });
@@ -122,7 +130,7 @@ router.get('/search', async (req, res) => {
                     email: data.email || '',
                     name: data.name,
                     phone_number: data.phone,
-                    checked_in_status: false,
+                    checked_in_status: checkedInIds.has(doc.id),
                     team_number: 0,
                     status: data.status || 'APPROVED',
                 });

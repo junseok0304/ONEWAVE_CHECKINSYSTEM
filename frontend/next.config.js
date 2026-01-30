@@ -30,7 +30,7 @@ const nextConfig = {
                     {
                         key: 'Content-Security-Policy',
                         value: isDevelopment
-                            ? "default-src 'self' http://localhost:8080 https: data: blob: 'unsafe-inline' 'unsafe-eval'; media-src 'self' data: blob: https:;"
+                            ? "default-src 'self' http://localhost:8080 http://localhost:8081 https: data: blob: 'unsafe-inline' 'unsafe-eval'; media-src 'self' data: blob: https:;"
                             : "upgrade-insecure-requests; default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; media-src 'self' data: blob: https:;"
                     }
                 ],

@@ -1,0 +1,407 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.title {
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+}
+
+.subtitle {
+    margin-top: 8px;
+    font-size: 15px;
+    font-weight: 650;
+    color: rgba(0, 0, 0, 0.55);
+    letter-spacing: -0.01em;
+}
+
+.tabNav {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border);
+    background: var(--card);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.tabButton {
+    padding: 16px 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: rgba(0, 0, 0, 0.55);
+    position: relative;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+}
+
+.tabButton:hover {
+    color: rgba(0, 0, 0, 0.75);
+}
+
+.tabButton.active {
+    color: var(--color-primary);
+}
+
+.tabButton.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--color-primary);
+}
+
+.tabContent {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0 var(--radius-xl) var(--radius-xl) var(--radius-xl);
+    padding: 22px;
+    box-shadow: var(--shadow);
+}
+
+.loadingWrap {
+    text-align: center;
+    padding: 40px;
+    font-size: 16px;
+    font-weight: 700;
+    color: rgba(0, 0, 0, 0.55);
+}
+
+.errorBox {
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: rgba(220, 53, 69, 0.10);
+    color: rgba(220, 53, 69, 0.95);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: 20px;
+}
+
+.formGroup {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.formLabel {
+    font-size: 14px;
+    font-weight: 800;
+    color: rgba(0, 0, 0, 0.75);
+    letter-spacing: -0.01em;
+}
+
+.formInput {
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: border-color 0.2s ease;
+}
+
+.formInput:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(50, 130, 246, 0.1);
+}
+
+.button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s ease;
+    letter-spacing: -0.01em;
+}
+
+.primaryButton {
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(50, 130, 246, 0.25);
+}
+
+.primaryButton:hover {
+    opacity: 0.92;
+}
+
+.primaryButton:disabled {
+    background: #cfd8e6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.secondaryButton {
+    background: transparent;
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+}
+
+.secondaryButton:hover {
+    background: rgba(50, 130, 246, 0.05);
+}
+
+.grid {
+    display: grid;
+    gap: 18px;
+}
+
+.grid2Col {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.grid3Col {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 16px;
+}
+
+.userGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.userListSection {
+    min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.userItem {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.userItem:hover {
+    background: rgba(50, 130, 246, 0.05);
+    border-color: var(--color-primary);
+}
+
+.userItem.active {
+    background: rgba(50, 130, 246, 0.1);
+    border-color: var(--color-primary);
+    font-weight: 700;
+}
+
+.userItemName {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.userItemPhone {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.55);
+    margin-top: 2px;
+}
+
+.typeChip {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 6px;
+    margin-bottom: 6px;
+}
+
+.typeChipActive {
+    background: var(--color-primary);
+    color: white;
+}
+
+.typeChipInactive {
+    background: rgba(0, 0, 0, 0.08);
+    color: rgba(0, 0, 0, 0.55);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.tableHeader {
+    background: #f8f9fa;
+    border-bottom: 2px solid var(--border);
+}
+
+.tableHeaderCell {
+    padding: 12px;
+    text-align: left;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: -0.01em;
+}
+
+.tableBody {
+}
+
+.tableRow {
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.2s ease;
+}
+
+.tableRow:hover {
+    background: rgba(50, 130, 246, 0.03);
+}
+
+.tableCell {
+    padding: 12px;
+    font-size: 14px;
+}
+
+.tableCellSmall {
+    font-size: 12px;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 40px;
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.statCard {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    text-align: center;
+}
+
+.statNumber {
+    font-size: 32px;
+    font-weight: 950;
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+}
+
+.statLabel {
+    font-size: 13px;
+    font-weight: 800;
+    color: rgba(0, 0, 0, 0.65);
+    letter-spacing: -0.01em;
+}
+
+.historyGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+}
+
+.historyCard {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+}
+
+.historyCardName {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.historyCardInfo {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.55);
+    margin-top: 6px;
+}
+
+.historyCardTime {
+    font-size: 11px;
+    color: rgba(0, 0, 0, 0.4);
+    margin-top: 4px;
+}
+
+.uncheckedCard {
+    border-color: #ffc0cb;
+    background: rgba(255, 192, 203, 0.1);
+}
+
+.checkedCard {
+    border-color: #90ee90;
+    background: rgba(144, 238, 144, 0.1);
+}
+
+@media (max-width: 980px) {
+    .grid2Col {
+        grid-template-columns: 1fr;
+    }
+
+    .grid3Col {
+        grid-template-columns: 1fr;
+    }
+
+    .userGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .tabNav {
+        flex-wrap: wrap;
+    }
+
+    .tabButton {
+        padding: 12px 16px;
+        font-size: 13px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .title {
+        font-size: 24px;
+    }
+
+    .historyGrid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+
+    .table {
+        font-size: 12px;
+    }
+
+    .tableCell {
+        padding: 8px;
+    }
+
+    .tableHeaderCell {
+        padding: 8px;
+        font-size: 12px;
+    }
+}
