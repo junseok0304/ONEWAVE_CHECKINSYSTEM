@@ -29,9 +29,10 @@ WORKDIR /app
 COPY --from=backend-builder /app/backend/node_modules /app/backend/node_modules
 COPY backend /app/backend
 
-# Frontend 빌드 결과 (필요시)
+# Frontend 빌드 결과
 COPY --from=frontend-builder /app/frontend/.next /app/frontend/.next
 COPY --from=frontend-builder /app/frontend/node_modules /app/frontend/node_modules
+COPY --from=frontend-builder /app/frontend/public /app/frontend/public
 COPY frontend/package*.json /app/frontend/
 
 # 헬스 체크
