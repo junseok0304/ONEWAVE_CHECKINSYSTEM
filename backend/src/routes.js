@@ -251,11 +251,6 @@ router.put('/participants/:participantId', verifyPassword, async (req, res) => {
         const updateData = { updatedAt: new Date() };
         const currentData = doc.data();
 
-        // 운영진은 checked_in_status, checkedOutAt, checkedOutMemo 업데이트 불가능
-        if (isAdmin && (checked_in_status !== undefined || checkedOutAt !== undefined || checkedOutMemo !== undefined)) {
-            return res.status(400).json({ message: '운영진은 체크인 상태를 수정할 수 없습니다.' });
-        }
-
         if (memo !== undefined) {
             updateData.memo = memo;
         }
