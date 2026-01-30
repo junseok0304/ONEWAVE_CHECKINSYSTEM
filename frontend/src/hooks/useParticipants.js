@@ -52,8 +52,21 @@ export function useParticipants() {
                     return converted;
                 });
 
-                // 참가자와 운영진 데이터 합치기
-                const allParticipants = [...(participantsData || []), ...adminAsParticipants];
+                // 참가자와 운영진 데이터 합치기 (중복 제거)
+                // Map을 사용하여 같은 ID를 가진 데이터는 운영진 데이터(adminAsParticipants)로 덮어씀
+                const participantMap = new Map();
+
+                // 먼저 일반 참가자 추가
+                (participantsData || []).forEach(p => {
+                    participantMap.set(p.id, p);
+                });
+
+                // 운영진 추가 (같은 ID가 있으면 덮어씀 - 운영진이 source of truth)
+                adminAsParticipants.forEach(admin => {
+                    participantMap.set(admin.id, admin);
+                });
+
+                const allParticipants = Array.from(participantMap.values());
 
                 // 디버깅: 운영진 데이터 확인
                 const admins = allParticipants.filter(p => p.isAdmin);
