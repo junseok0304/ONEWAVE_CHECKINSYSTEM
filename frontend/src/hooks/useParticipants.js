@@ -8,19 +8,54 @@ const QUERY_KEY = {
 const MASTER_PASSWORD = process.env.NEXT_PUBLIC_MASTER_PASSWORD || '';
 
 /**
- * 모든 참가자 데이터를 조회하는 Hook
+ * 모든 참가자 데이터를 조회하는 Hook (participants_checkin + participants_admin)
  * 자동 캐싱 및 중복 요청 방지
  */
 export function useParticipants() {
     return useQuery({
         queryKey: QUERY_KEY.PARTICIPANTS,
-        queryFn: () =>
-            apiRequest(
-                '/participants',
-                'GET',
-                undefined,
-                MASTER_PASSWORD
-            ),
+        queryFn: async () => {
+            try {
+                // 참가자 조회 (일반 참가자)
+                const participantsData = await apiRequest(
+                    '/participants',
+                    'GET',
+                    undefined,
+                    MASTER_PASSWORD
+                );
+
+                // 운영진 조회
+                const adminData = await apiRequest(
+                    '/members',
+                    'GET',
+                    undefined,
+                    MASTER_PASSWORD
+                );
+
+                // 운영진 데이터 변환 (participants 포맷에 맞추기)
+                const adminAsParticipants = (adminData.members || []).map(admin => ({
+                    id: admin.phoneKey,
+                    email: admin.email || '',
+                    name: admin.name,
+                    team_number: 0, // 운영진 표시
+                    part: admin.part || '',
+                    phone_number: admin.phoneNumber,
+                    status: admin.status || 'APPROVED',
+                    isCheckedIn: false,
+                    checkedInAt: null,
+                    memo: admin.memo || '',
+                    checkedOutAt: null,
+                    checkedOutMemo: '',
+                    isAdmin: true, // 운영진 플래그
+                }));
+
+                // 참가자와 운영진 데이터 합치기
+                return [...participantsData, ...adminAsParticipants];
+            } catch (error) {
+                console.error('참가자 데이터 조회 실패:', error);
+                throw error;
+            }
+        },
         staleTime: 30 * 1000,  // 30초 (기본값 5분보다 빠름)
         gcTime: 10 * 60 * 1000, // 10분
         refetchInterval: false,  // 자동 갱신 안함

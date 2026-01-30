@@ -287,8 +287,33 @@ export default function StatusManagementPage() {
                     </thead>
                     <tbody>
                         {filteredParticipants.map((p) => (
-                            <tr key={p.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '100px' }}>{p.name}</td>
+                            <tr
+                                key={p.id}
+                                style={{
+                                    borderBottom: '1px solid #dee2e6',
+                                    backgroundColor: p.isAdmin ? '#fff3cd' : 'white', // 운영진은 노란색 배경
+                                }}
+                            >
+                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '100px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span>{p.name}</span>
+                                        {p.isAdmin && (
+                                            <span
+                                                style={{
+                                                    padding: '2px 6px',
+                                                    backgroundColor: '#ffc107',
+                                                    color: '#856404',
+                                                    borderRadius: '3px',
+                                                    fontSize: '11px',
+                                                    fontWeight: 'bold',
+                                                    whiteSpace: 'nowrap',
+                                                }}
+                                            >
+                                                운영진
+                                            </span>
+                                        )}
+                                    </div>
+                                </td>
                                 <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '50px' }}>{p.team_number || '-'}</td>
                                 <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '60px' }}>{p.part || '-'}</td>
                                 <td style={{ padding: '12px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '120px' }}>
