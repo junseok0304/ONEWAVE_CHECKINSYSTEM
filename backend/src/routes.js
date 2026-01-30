@@ -25,10 +25,11 @@ const formatTimestamp = (timestamp) => {
     }
 };
 
-// 오늘 날짜를 YYYY-MM-DD 형식으로 반환
+// 오늘 날짜를 YYYY-MM-DD 형식으로 반환 (한국 시간대 기준)
 const getTodayString = () => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    const koreaTime = new Date(today.getTime() + 9 * 60 * 60 * 1000);
+    return koreaTime.toISOString().split('T')[0];
 };
 
 // 휴대폰 번호에서 끝 4자리 추출 (010-2140-7614 → 7614)
