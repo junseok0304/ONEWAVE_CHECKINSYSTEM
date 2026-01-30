@@ -6,9 +6,11 @@ COPY backend/package*.json ./
 RUN npm install --production
 
 # Multi-stage build - Frontend
-ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8081/api
-
 FROM node:20-alpine AS frontend-builder
+
+ARG NEXT_PUBLIC_API_BASE_URL=https://checkin.omong.kr:8081/api
+ARG NEXT_PUBLIC_MASTER_PASSWORD=1q2w3e4r!@#
+ARG NEXT_PUBLIC_KIOSK_PASSWORD=omonghackathon
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
@@ -16,9 +18,16 @@ RUN npm install
 
 COPY frontend/ .
 
-# 빌드 시 환경 변수 설정
-ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
-RUN npm run build
+# ARG 값을 환경 변수로 설정하여 npm run build에서 사용 가능하게 함
+RUN echo "NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}" > .env.production && \
+    echo "NEXT_PUBLIC_MASTER_PASSWORD=${NEXT_PUBLIC_MASTER_PASSWORD}" >> .env.production && \
+    echo "NEXT_PUBLIC_KIOSK_PASSWORD=${NEXT_PUBLIC_KIOSK_PASSWORD}" >> .env.production && \
+    echo "✅ Environment file loaded:" && \
+    cat .env.production && \
+    NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
+    NEXT_PUBLIC_MASTER_PASSWORD=${NEXT_PUBLIC_MASTER_PASSWORD} \
+    NEXT_PUBLIC_KIOSK_PASSWORD=${NEXT_PUBLIC_KIOSK_PASSWORD} \
+    npm run build
 
 # Production image
 FROM node:20-alpine

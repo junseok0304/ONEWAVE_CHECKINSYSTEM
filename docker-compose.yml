@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_API_BASE_URL=https://checkin.omong.kr:8081/api
+        - NEXT_PUBLIC_MASTER_PASSWORD=1q2w3e4r!@#
+        - NEXT_PUBLIC_KIOSK_PASSWORD=omonghackathon
     container_name: qrcheckin-backend
     ports:
       - "8081:8081"
@@ -16,6 +18,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8081
+      - GOOGLE_APPLICATION_CREDENTIALS=/home/ubuntu/qrcheckin/firebase-admin.json
+      - FIREBASE_PROJECT_ID=onewave-bot
     volumes:
       - /home/ubuntu/qrcheckin/firebase-admin.json:/home/ubuntu/qrcheckin/firebase-admin.json:ro
     restart: unless-stopped

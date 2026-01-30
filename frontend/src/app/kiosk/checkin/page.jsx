@@ -90,7 +90,7 @@ export default function CheckinPage() {
 
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/search?phoneLast4=${valueToSearch}`
+                `/api/search?phoneLast4=${valueToSearch}`
             );
 
             if (res.status === 404) {
@@ -142,7 +142,7 @@ export default function CheckinPage() {
         setError('');
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/checkin`, {
+            const res = await fetch(`/api/checkin`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
