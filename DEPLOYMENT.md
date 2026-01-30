@@ -1,242 +1,189 @@
-# QR Checkin 배포 가이드
+# QRCheckin Docker 배포 가이드
 
-## 개요
-Ubuntu 서버에 Docker Compose와 Nginx를 사용한 배포 설정입니다.
+## 📋 배포 전 준비사항
 
-## 사전 요구사항
-- Ubuntu 서버 (18.04 이상)
-- Docker & Docker Compose 설치됨
-- Nginx 설치됨
-- SSL 인증서 (Let's Encrypt)
+### 1. 원격 서버 준비
 
-## 배포 단계
-
-### 1. 서버 준비 (한 번만 수행)
-
-#### 1-1. 프로젝트 디렉토리 생성
 ```bash
+# SSH로 omong-public 서버 접속
+ssh omong-public
+
+# Docker 설치 확인
+docker --version
+docker-compose --version
+
+# 배포 디렉토리 생성
 mkdir -p /opt/qrcheckin
 cd /opt/qrcheckin
 ```
 
-#### 1-2. 프로젝트 클론
+### 2. 환경 변수 설정
+
+원격 서버에서 `.env.production` 파일 생성:
+
 ```bash
-git clone <your-repo-url> .
+ssh omong-public
+cd /opt/qrcheckin
+cat > .env.production << 'ENV'
+# Firebase 설정
+FIREBASE_PROJECT_ID=onewave-bot
+GOOGLE_APPLICATION_CREDENTIALS=/opt/qrcheckin/firebase-admin.json
+
+# 인증 설정
+MASTER_PASSWORD=your-strong-password-here
+KIOSK_PASSWORD=your-kiosk-password-here
+
+# 기타 설정
+CORS_ORIGIN=https://checkin.omong.kr
+NODE_ENV=production
+ENV
 ```
 
-#### 1-3. 환경 변수 설정
+### 3. Firebase 서비스 계정 키 설정
+
+원격 서버에 Firebase 서비스 계정 JSON 파일을 업로드:
+
 ```bash
-cp .env.production .env
-# 실제 값으로 수정
-nano .env
+# 로컬에서 원격 서버로 파일 복사
+scp /path/to/firebase-admin.json omong-public:/opt/qrcheckin/
+
+# 또는 원격 서버에서 직접 생성
+ssh omong-public
+cat > /opt/qrcheckin/firebase-admin.json << 'JSON'
+{
+  "type": "service_account",
+  "project_id": "onewave-bot",
+  ...
+}
+JSON
 ```
 
-필요한 환경 변수:
-- `FIREBASE_PROJECT_ID`: Firebase 프로젝트 ID
-- `FIREBASE_PRIVATE_KEY`: Firebase 서비스 계정 개인 키
-- `FIREBASE_CLIENT_EMAIL`: Firebase 서비스 계정 이메일
-- `MASTER_PASSWORD`: 관리자 비밀번호
-- `KIOSK_PASSWORD`: 키오스크 비밀번호
+## 🚀 배포 실행
 
-#### 1-4. SSL 인증서 설정 (Let's Encrypt)
+### 자동 배포 스크립트 사용
+
 ```bash
-sudo apt-get install certbot python3-certbot-nginx -y
-
-# 첫 인증서 발급
-sudo certbot certonly --standalone -d checkin.omong.kr
-
-# 자동 갱신 설정 (기본값으로 자동 활성화)
-sudo certbot renew --dry-run
+# 로컬에서 실행
+cd /Users/junseok/Desktop/project/qrcheckin
+./deploy.sh production omong-public
 ```
 
-#### 1-5. Nginx 설정
+### 수동 배포
+
 ```bash
-# Nginx 기본 설정 백업
-sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.backup
-
-# 프로젝트의 nginx.conf를 Nginx sites-available에 복사
-sudo cp nginx.conf /etc/nginx/sites-available/qrcheckin
-
-# sites-enabled 심링크
-sudo ln -s /etc/nginx/sites-available/qrcheckin /etc/nginx/sites-enabled/
-
-# Nginx 문법 확인
-sudo nginx -t
-
-# Nginx 재시작
-sudo systemctl restart nginx
-```
-
-### 2. 애플리케이션 시작
-
-#### 2-1. Docker Compose로 실행
-```bash
+# 1. 원격 서버에 접속
+ssh omong-public
 cd /opt/qrcheckin
 
-# 백그라운드에서 실행
+# 2. 최신 코드 다운로드
+git clone https://github.com/your-repo/qrcheckin.git .
+# 또는
+git pull origin main
+
+# 3. Docker 빌드 및 실행
+docker-compose build --no-cache
 docker-compose up -d
 
-# 상태 확인
+# 4. 상태 확인
+docker-compose ps
+docker-compose logs -f
+```
+
+## 🔍 배포 후 확인
+
+```bash
+# 서비스 상태 확인
 docker-compose ps
 
 # 로그 확인
 docker-compose logs -f
+
+# API 헬스 체크
+curl http://localhost:8081/api
+
+# 컨테이너 내부 접속
+docker-compose exec backend sh
 ```
 
-#### 2-2. 서비스 상태 확인
+## 📊 주요 포트
+
+- **8081**: Backend API
+- **3000**: Frontend (Next.js)
+
+## 🔒 보안 주의사항
+
+1. `.env.production` 파일은 git에 커밋하지 말 것
+2. Firebase 키 파일은 절대 공개하지 말 것
+3. 프로덕션 환경에서는 HTTPS 사용 필수
+4. 방화벽 설정으로 포트 제한
+
+## 🚨 문제 해결
+
+### 컨테이너가 시작되지 않음
+
 ```bash
-# 백엔드 헬스 체크
-curl http://localhost:8080/
+# 로그 확인
+docker-compose logs
 
-# 프론트엔드 헬스 체크
-curl http://localhost:3000/
+# 이미지 재빌드
+docker-compose build --no-cache --pull
 
-# Nginx를 통한 확인
-curl https://checkin.omong.kr/health
+# 모든 컨테이너 제거 후 재시작
+docker-compose down -v
+docker-compose up -d
 ```
 
-### 3. 유지보수
+### 환경 변수 오류
 
-#### 로그 확인
 ```bash
-# 모든 서비스 로그
-docker-compose logs -f
+# .env.production 파일 확인
+cat .env.production
 
-# 특정 서비스 로그
-docker-compose logs -f backend
-docker-compose logs -f frontend
-
-# Nginx 로그
-sudo tail -f /var/log/nginx/qrcheckin_access.log
-sudo tail -f /var/log/nginx/qrcheckin_error.log
+# 필수 환경 변수 확인
+grep -E "FIREBASE_PROJECT_ID|MASTER_PASSWORD" .env.production
 ```
 
-#### 업데이트
-```bash
-cd /opt/qrcheckin
+### Firebase 연결 오류
 
-# 최신 코드 가져오기
+```bash
+# Firebase 키 파일 권한 확인
+ls -la firebase-admin.json
+
+# GOOGLE_APPLICATION_CREDENTIALS 경로 확인
+echo $GOOGLE_APPLICATION_CREDENTIALS
+```
+
+## 🔄 배포 후 업데이트
+
+```bash
+# 새 버전 배포
 git pull origin main
+docker-compose build --no-cache
+docker-compose up -d
 
-# 이미지 다시 빌드
-docker-compose build
-
-# 서비스 재시작
+# 이전 버전으로 롤백
+docker-compose down
+git checkout [이전-커밋-해시]
 docker-compose up -d
 ```
 
-#### 서비스 중지
-```bash
-docker-compose down
-```
-
-#### 전체 재시작
-```bash
-docker-compose restart
-```
-
-### 4. 문제 해결
-
-#### 포트 충돌
-```bash
-# 포트 사용 확인
-sudo lsof -i :3000
-sudo lsof -i :8080
-sudo lsof -i :80
-sudo lsof -i :443
-```
-
-#### 디스크 공간 정리
-```bash
-# 사용하지 않는 Docker 이미지/컨테이너 정리
-docker system prune -a
-```
-
-#### 환경 변수 재설정
-```bash
-# .env 파일 수정 후
-docker-compose down
-docker-compose up -d
-```
-
-#### SSL 인증서 갱신
-```bash
-sudo certbot renew --force-renewal
-sudo systemctl reload nginx
-```
-
-### 5. 시스템 서비스로 등록 (선택사항)
-
-Systemd 서비스로 자동 시작 설정:
+## 📝 모니터링
 
 ```bash
-sudo nano /etc/systemd/system/qrcheckin.service
+# 실시간 로그 모니터링
+docker-compose logs -f backend
+
+# 컨테이너 리소스 사용량
+docker stats qrcheckin-backend
+
+# 헬스 체크 상태
+docker ps --filter "name=qrcheckin-backend" --format "table {{.Names}}\t{{.Status}}"
 ```
 
-다음 내용 추가:
-```ini
-[Unit]
-Description=QR Checkin Docker Compose
-After=docker.service
-Requires=docker.service
+---
 
-[Service]
-Type=simple
-WorkingDirectory=/opt/qrcheckin
-ExecStart=/usr/bin/docker-compose up
-ExecStop=/usr/bin/docker-compose down
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-활성화:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable qrcheckin
-sudo systemctl start qrcheckin
-```
-
-### 6. 모니터링 설정 (선택사항)
-
-#### 디스크 공간 모니터링
-```bash
-df -h /opt/qrcheckin
-```
-
-#### 프로세스 모니터링
-```bash
-docker stats
-```
-
-## 주요 포트 정보
-- HTTP: 80
-- HTTPS: 443
-- 백엔드 (내부): 8080
-- 프론트엔드 (내부): 3000
-
-## 도메인 및 접근 방법
-- 메인 도메인: https://checkin.omong.kr
-- API: https://checkin.omong.kr/api/*
-- 관리자: https://checkin.omong.kr/admin
-- 키오스크: https://checkin.omong.kr/kiosk
-
-## 문제 발생 시 체크리스트
-- [ ] 환경 변수 설정 확인 (.env 파일)
-- [ ] Firebase 자격증명 확인
-- [ ] SSL 인증서 유효성 확인 (`sudo certbot certificates`)
-- [ ] Nginx 로그 확인
-- [ ] Docker Compose 로그 확인
-- [ ] 디스크 공간 확인
-- [ ] 네트워크 연결 확인
-
-## 배포 후 테스트 체크리스트
-- [ ] HTTPS 접속 확인
-- [ ] 메인 페이지 로드 확인
-- [ ] 관리자 로그인 확인
-- [ ] 키오스크 페이지 확인
-- [ ] API 엔드포인트 응답 확인
-- [ ] 데이터베이스 연결 확인
-- [ ] 정적 파일 로딩 확인
+**배포 완료 후 다음을 확인하세요:**
+- [ ] API가 정상 작동하는가?
+- [ ] 프론트엔드가 로드되는가?
+- [ ] 체크인 기능이 작동하는가?
+- [ ] 로그에 에러가 없는가?
