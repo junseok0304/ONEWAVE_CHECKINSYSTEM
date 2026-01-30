@@ -108,7 +108,8 @@ export default function CheckinPage() {
 
             const data = await res.json();
             console.log('API Response:', data);
-            setCandidates(data);
+            // API 응답 포맷: { results: [...] }
+            setCandidates(data.results || data);
             setStep('select');
         } catch (err) {
             setError('네트워크 오류가 발생했습니다.');
@@ -365,7 +366,7 @@ export default function CheckinPage() {
                                     <div className={styles.candidateList}>
                                         {candidates.map((candidate) => (
                                             <button
-                                                key={candidate.id}
+                                                key={candidate.phoneKey}
                                                 type="button"
                                                 className={`${styles.candidateBtn} ${candidate.checked_in_status ? styles.candidateDisabled : ''}`}
                                                 onClick={() => handleSelectParticipant(candidate)}

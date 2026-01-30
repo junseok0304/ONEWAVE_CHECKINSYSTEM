@@ -33,24 +33,36 @@ export function useParticipants() {
                 );
 
                 // 운영진 데이터 변환 (participants 포맷에 맞추기)
-                const adminAsParticipants = (adminData.members || []).map(admin => ({
-                    id: admin.phoneKey,
-                    email: admin.email || '',
-                    name: admin.name,
-                    team_number: 0, // 운영진 표시
-                    part: admin.part || '',
-                    phone_number: admin.phoneNumber,
-                    status: admin.status || 'APPROVED',
-                    isCheckedIn: false,
-                    checkedInAt: null,
-                    memo: admin.memo || '',
-                    checkedOutAt: null,
-                    checkedOutMemo: '',
-                    isAdmin: true, // 운영진 플래그
-                }));
+                const adminAsParticipants = (adminData?.members || []).map(admin => {
+                    const converted = {
+                        id: admin.phoneKey,
+                        email: admin.email || '',
+                        name: admin.name,
+                        team_number: 0, // 운영진 표시 - 반드시 숫자
+                        part: admin.part || '',
+                        phone_number: admin.phoneNumber,
+                        status: admin.status || 'APPROVED',
+                        isCheckedIn: false,
+                        checkedInAt: null,
+                        memo: admin.memo || '',
+                        checkedOutAt: null,
+                        checkedOutMemo: '',
+                        isAdmin: true, // 운영진 플래그
+                    };
+                    return converted;
+                });
 
                 // 참가자와 운영진 데이터 합치기
-                return [...participantsData, ...adminAsParticipants];
+                const allParticipants = [...(participantsData || []), ...adminAsParticipants];
+
+                // 디버깅: 운영진 데이터 확인
+                const admins = allParticipants.filter(p => p.isAdmin);
+                if (admins.length > 0) {
+                    console.log('✅ 운영진 데이터 로드 완료:', admins.length + '명');
+                    console.log('첫 번째 운영진:', admins[0]);
+                }
+
+                return allParticipants;
             } catch (error) {
                 console.error('참가자 데이터 조회 실패:', error);
                 throw error;
