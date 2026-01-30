@@ -1,8 +1,20 @@
 import express from 'express';
+import { query, body, validationResult } from 'express-validator';
 import db from './firestore.js';
 import { verifyPassword } from './authMiddleware.js';
 
 const router = express.Router();
+
+/**
+ * 입력 검증 미들웨어
+ */
+const handleValidationErrors = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: '입력값이 유효하지 않습니다.', errors: errors.array() });
+    }
+    next();
+};
 
 router.get('/', (req, res) => res.json({ message: 'QRCheckin API Online' }));
 
@@ -88,12 +100,15 @@ router.get('/participants', verifyPassword, async (req, res) => {
 });
 
 // 휴대폰 끝 4자리로 참가자 검색 (키오스크용) - 운영진 + 참가자
-router.get('/search', async (req, res) => {
-    const { phoneLast4 } = req.query;
-
-    if (!phoneLast4 || phoneLast4.length !== 4) {
-        return res.status(400).json({ message: '휴대폰 번호 뒷 4자리를 입력해주세요.' });
-    }
+router.get('/search',
+    query('phoneLast4')
+        .trim()
+        .notEmpty().withMessage('휴대폰 번호는 필수입니다.')
+        .isLength({ min: 4, max: 4 }).withMessage('뒷 4자리만 입력해주세요.')
+        .isNumeric().withMessage('숫자만 입력 가능합니다.'),
+    handleValidationErrors,
+    async (req, res) => {
+        const { phoneLast4 } = req.query;
 
     try {
         const results = [];
@@ -145,14 +160,16 @@ router.get('/search', async (req, res) => {
     }
 });
 
-// 체크인 처리
 // 체크인 처리 (운영진 + 참가자)
-router.post('/checkin', async (req, res) => {
-    const { phoneKey } = req.body;
-
-    if (!phoneKey) {
-        return res.status(400).json({ message: '참가자 정보가 필요합니다.' });
-    }
+router.post('/checkin',
+    body('phoneKey')
+        .trim()
+        .notEmpty().withMessage('phoneKey는 필수입니다.')
+        .isLength({ min: 5, max: 50 }).withMessage('phoneKey 형식이 유효하지 않습니다.')
+        .matches(/^[a-zA-Z0-9_-]+$/).withMessage('phoneKey는 알파벳, 숫자, 언더스코어, 하이픈만 허용됩니다.'),
+    handleValidationErrors,
+    async (req, res) => {
+        const { phoneKey } = req.body;
 
     try {
         // 1. 운영진 확인 (participants_admin)
