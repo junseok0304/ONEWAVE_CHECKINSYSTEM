@@ -50,27 +50,29 @@ router.get('/members', verifyPassword, async (req, res) => {
     res.json({ members: data });
 });
 
-// 참가자 조회 (관리자용)
+// 참가자 조회 (관리자용) - 운영진 제외 (운영진은 participants_admin에서 별도 관리)
 router.get('/participants', verifyPassword, async (req, res) => {
     const snapshot = await db.collection('participants_checkin').get();
-    const data = snapshot.docs.map(doc => {
-        const docData = doc.data();
+    const data = snapshot.docs
+        .map(doc => {
+            const docData = doc.data();
 
-        return {
-            id: doc.id,
-            email: docData.email,
-            name: docData.name,
-            team_number: docData.teamNumber || 0,
-            part: docData.position || '',
-            phone_number: docData.phone,
-            status: docData.status || 'REJECTED',
-            isCheckedIn: docData.checked_in_status || false,
-            checkedInAt: formatTimestamp(docData.checkedInAt),
-            memo: docData.memo || '',
-            checkedOutAt: formatTimestamp(docData.checkedOutAt),
-            checkedOutMemo: docData.checkedOutMemo || '',
-        };
-    });
+            return {
+                id: doc.id,
+                email: docData.email,
+                name: docData.name,
+                team_number: docData.teamNumber || 0,
+                part: docData.position || '',
+                phone_number: docData.phone,
+                status: docData.status || 'REJECTED',
+                isCheckedIn: docData.checked_in_status || false,
+                checkedInAt: formatTimestamp(docData.checkedInAt),
+                memo: docData.memo || '',
+                checkedOutAt: formatTimestamp(docData.checkedOutAt),
+                checkedOutMemo: docData.checkedOutMemo || '',
+            };
+        })
+        .filter(p => p.team_number !== 0 && p.team_number !== '0'); // 운영진 제외
     res.json(data);
 });
 
