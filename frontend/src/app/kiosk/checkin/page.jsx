@@ -147,7 +147,7 @@ export default function CheckinPage() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ participantId: selectedParticipant.id }),
+                body: JSON.stringify({ phoneKey: selectedParticipant.phoneKey }),
             });
 
             if (res.status === 409) {
@@ -162,8 +162,9 @@ export default function CheckinPage() {
                 return;
             }
 
-            // 운영진인지 확인 (team_number === 0)
-            const isStaff = selectedParticipant.team_number === 0 || selectedParticipant.team_number === '0';
+            // API 응답에서 운영진 여부 확인
+            const result = await res.json();
+            const isStaff = result.isStaff || false;
 
             // 음성 재생 시작 (볼륨 페이드인)
             const audioSrc = isStaff ? '/correctAdmin.mp3' : '/correct.mp3';
@@ -171,7 +172,7 @@ export default function CheckinPage() {
 
             // 음성 재생이 시작된 후 페이지 이동
             if (isStaff) {
-                router.push(`/kiosk/success-staff?name=${encodeURIComponent(selectedParticipant.name)}`);
+                router.push(`/kiosk/success-staff?name=${encodeURIComponent(result.name || selectedParticipant.name)}`);
             } else {
                 router.push('/kiosk/success');
             }

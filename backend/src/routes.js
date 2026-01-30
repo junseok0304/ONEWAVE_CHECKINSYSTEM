@@ -135,32 +135,83 @@ router.get('/search', async (req, res) => {
 });
 
 // 체크인 처리
+// 체크인 처리 (운영진 + 참가자)
 router.post('/checkin', async (req, res) => {
-    const { participantId } = req.body;
+    const { phoneKey } = req.body;
 
-    if (!participantId) {
-        return res.status(400).json({ message: '참가자 ID가 필요합니다.' });
+    if (!phoneKey) {
+        return res.status(400).json({ message: '참가자 정보가 필요합니다.' });
     }
 
-    const doc = await db.collection('participants_checkin').doc(participantId).get();
+    try {
+        const today = getTodayString();
 
-    if (!doc.exists) {
-        return res.status(404).json({ message: '참가자를 찾을 수 없습니다.' });
+        // 이미 체크인했는지 확인
+        const checkInDoc = await db.collection(`checkIn_${today}`).doc(phoneKey).get();
+        if (checkInDoc.exists) {
+            return res.status(409).json({ message: '이미 체크인됨' });
+        }
+
+        // 1. 운영진 확인 (participants_admin)
+        const adminDoc = await db.collection('participants_admin').doc(phoneKey).get();
+        if (adminDoc.exists) {
+            const adminData = adminDoc.data();
+            await db.collection(`checkIn_${today}`).doc(phoneKey).set({
+                name: adminData.name,
+                phoneNumber: adminData.phone,
+                part: adminData.position || '',
+                teamNumber: 0,
+                isStaff: true,
+                checkedInAt: new Date(),
+            });
+
+            return res.json({
+                success: true,
+                phoneKey,
+                name: adminData.name,
+                isStaff: true,
+            });
+        }
+
+        // 2. 일반 참가자 확인 (participants_checkin)
+        const participantDoc = await db.collection('participants_checkin').doc(phoneKey).get();
+        if (!participantDoc.exists) {
+            return res.status(404).json({ message: '참가자를 찾을 수 없습니다.' });
+        }
+
+        const participantData = participantDoc.data();
+
+        if (participantData.checked_in_status) {
+            return res.status(409).json({ message: '이미 체크인됨' });
+        }
+
+        // 3. 체크인 기록 저장
+        await db.collection(`checkIn_${today}`).doc(phoneKey).set({
+            name: participantData.name,
+            phoneNumber: participantData.phone,
+            part: participantData.position || '',
+            teamNumber: participantData.teamNumber || 1,
+            isStaff: false,
+            checkedInAt: new Date(),
+        });
+
+        // 4. participants_checkin의 checked_in_status도 업데이트
+        await db.collection('participants_checkin').doc(phoneKey).update({
+            checked_in_status: true,
+            checkedInAt: new Date(),
+            updatedAt: new Date(),
+        });
+
+        res.json({
+            success: true,
+            phoneKey,
+            name: participantData.name,
+            isStaff: false,
+        });
+    } catch (error) {
+        console.error('Checkin error:', error);
+        res.status(500).json({ message: '체크인 중 오류가 발생했습니다.' });
     }
-
-    const data = doc.data();
-
-    if (data.checked_in_status) {
-        return res.status(409).json({ message: '이미 체크인됨' });
-    }
-
-    await db.collection('participants_checkin').doc(participantId).update({
-        checked_in_status: true,
-        checkedInAt: new Date(),
-        updatedAt: new Date(),
-    });
-
-    res.json({ success: true, participantId, name: data.name });
 });
 
 // 참가자 정보 수정 (메모, 체크인 상태 등)
