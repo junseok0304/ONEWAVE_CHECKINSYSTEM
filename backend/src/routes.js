@@ -74,7 +74,7 @@ router.get('/participants', verifyPassword, async (req, res) => {
     res.json(data);
 });
 
-// 휴대폰 끝 4자리로 참가자 검색 (키오스크용)
+// 휴대폰 끝 4자리로 참가자 검색 (키오스크용) - 운영진 + 참가자
 router.get('/search', async (req, res) => {
     const { phoneLast4 } = req.query;
 
@@ -83,15 +83,16 @@ router.get('/search', async (req, res) => {
     }
 
     try {
-        const snapshot = await db.collection('participants_checkin').get();
         const results = [];
 
-        snapshot.forEach(doc => {
+        // 1. participants_checkin에서 검색 (일반 참가자)
+        const checkinSnapshot = await db.collection('participants_checkin').get();
+        checkinSnapshot.forEach(doc => {
             const data = doc.data();
             const phoneLastDigits = getPhoneLast4(data.phone);
             if (phoneLastDigits === phoneLast4) {
                 results.push({
-                    id: doc.id,
+                    phoneKey: doc.id,
                     email: data.email,
                     name: data.name,
                     phone_number: data.phone,
@@ -102,11 +103,29 @@ router.get('/search', async (req, res) => {
             }
         });
 
+        // 2. participants_admin에서 검색 (운영진)
+        const adminSnapshot = await db.collection('participants_admin').get();
+        adminSnapshot.forEach(doc => {
+            const data = doc.data();
+            const phoneLastDigits = getPhoneLast4(data.phone);
+            if (phoneLastDigits === phoneLast4) {
+                results.push({
+                    phoneKey: doc.id,
+                    email: data.email || '',
+                    name: data.name,
+                    phone_number: data.phone,
+                    checked_in_status: false,
+                    team_number: 0,
+                    status: data.status || 'APPROVED',
+                });
+            }
+        });
+
         if (results.length === 0) {
             return res.status(404).json({ message: '해당하는 참가자를 찾을 수 없습니다.' });
         }
 
-        res.json(results);
+        res.json({ results });
     } catch (error) {
         console.error('Search error:', error);
         res.status(500).json({ message: '검색 중 오류가 발생했습니다.' });
