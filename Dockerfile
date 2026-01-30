@@ -3,14 +3,14 @@ FROM node:20-alpine AS backend-builder
 
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm ci --only=production
+RUN npm install --production
 
 # Multi-stage build - Frontend
 FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install
 
 COPY frontend/ .
 RUN npm run build
@@ -35,5 +35,8 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 EXPOSE 8081 3000
 
-# Backend 시작
-CMD ["node", "backend/src/server.js"]
+# 동시 실행을 위해 concurrently 설치
+RUN npm install -g concurrently
+
+# Backend와 Frontend 동시 실행
+CMD ["sh", "-c", "concurrently 'node backend/src/server.js' 'cd frontend && npm start'"]
