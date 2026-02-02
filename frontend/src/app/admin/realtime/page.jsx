@@ -60,19 +60,23 @@ export default function RealtimePage() {
      */
     const teamStatus = useMemo(() => {
         const teamMap = {};
+        const existingTeams = new Set();
 
-        // 1-50 팀 초기화
-        for (let i = 1; i <= 50; i++) {
-            teamMap[i] = { teamNumber: i, members: [], allCheckedIn: false, checkInRate: 0 };
-        }
-
-        // 운영진 팀 (team_number === 0) 초기화
-        teamMap[0] = { teamNumber: 0, members: [], allCheckedIn: false, isAdmin: true, checkInRate: 0 };
-
-        // 참가자 그룹화
+        // 참가자 그룹화 및 실제 존재하는 팀 파악
         participants.forEach(p => {
             const teamNum = parseInt(p.team_number);
-            if (teamNum === 0 || (teamNum >= 1 && teamNum <= 50)) {
+            if (teamNum === 0) {
+                // 운영진
+                if (!teamMap[0]) {
+                    teamMap[0] = { teamNumber: 0, members: [], allCheckedIn: false, isAdmin: true, checkInRate: 0 };
+                }
+                teamMap[0].members.push(p);
+            } else if (teamNum >= 1) {
+                // 일반 팀
+                existingTeams.add(teamNum);
+                if (!teamMap[teamNum]) {
+                    teamMap[teamNum] = { teamNumber: teamNum, members: [], allCheckedIn: false, checkInRate: 0 };
+                }
                 teamMap[teamNum].members.push(p);
             }
         });
@@ -86,9 +90,15 @@ export default function RealtimePage() {
             }
         });
 
-        // 1-50, 운영진 순서로 반환
-        const result = Array.from({ length: 50 }, (_, i) => teamMap[i + 1]);
-        result.push(teamMap[0]);
+        // 실제 존재하는 팀들을 번호 순서대로 정렬
+        const teamNumbers = Array.from(existingTeams).sort((a, b) => a - b);
+        const result = teamNumbers.map(num => teamMap[num]);
+
+        // 운영진 팀 추가
+        if (teamMap[0]) {
+            result.push(teamMap[0]);
+        }
+
         return result;
     }, [participants]);
 
@@ -99,9 +109,10 @@ export default function RealtimePage() {
         const regularTeams = teamStatus.filter(t => !t.isAdmin);
         const completeTeams = regularTeams.filter(t => t.allCheckedIn).length;
         const incompleteTeams = regularTeams.filter(t => !t.allCheckedIn).length;
+        const totalTeams = regularTeams.length;
 
         return {
-            total: 50,
+            total: totalTeams,
             complete: completeTeams,
             incomplete: incompleteTeams,
         };

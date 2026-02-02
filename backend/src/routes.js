@@ -111,7 +111,7 @@ router.get('/search',
         const { phoneLast4 } = req.query;
 
     try {
-        const results = [];
+        const resultMap = {};  // phoneKey로 중복 제거
 
         // 1. participants_checkin에서 검색 (일반 참가자)
         const checkinSnapshot = await db.collection('participants_checkin').get();
@@ -119,7 +119,7 @@ router.get('/search',
             const data = doc.data();
             const phoneLastDigits = getPhoneLast4(data.phone);
             if (phoneLastDigits === phoneLast4) {
-                results.push({
+                resultMap[doc.id] = {
                     phoneKey: doc.id,
                     email: data.email,
                     name: data.name,
@@ -127,27 +127,29 @@ router.get('/search',
                     checked_in_status: data.checked_in_status || false,
                     team_number: data.teamNumber,
                     status: data.status || 'REJECTED',
-                });
+                };
             }
         });
 
-        // 2. participants_admin에서 검색 (운영진)
+        // 2. participants_admin에서 검색 (운영진) - 이미 있는 데이터는 관리자 정보로 덮어씀
         const adminSnapshot = await db.collection('participants_admin').get();
         adminSnapshot.forEach(doc => {
             const data = doc.data();
             const phoneLastDigits = getPhoneLast4(data.phone);
             if (phoneLastDigits === phoneLast4) {
-                results.push({
+                resultMap[doc.id] = {
                     phoneKey: doc.id,
                     email: data.email || '',
                     name: data.name,
                     phone_number: data.phone,
                     checked_in_status: data.checked_in_status || false,
-                    team_number: 0,
+                    team_number: 0,  // 운영진은 항상 0
                     status: data.status || 'APPROVED',
-                });
+                };
             }
         });
+
+        const results = Object.values(resultMap);
 
         if (results.length === 0) {
             return res.status(404).json({ message: '해당하는 참가자를 찾을 수 없습니다.' });

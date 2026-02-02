@@ -1,5 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    async rewrites() {
+        return {
+            beforeFiles: [
+                {
+                    source: '/api/:path*',
+                    destination: 'http://localhost:8081/api/:path*',
+                },
+            ],
+        };
+    },
     async headers() {
         const isDevelopment = process.env.NODE_ENV === 'development';
 
