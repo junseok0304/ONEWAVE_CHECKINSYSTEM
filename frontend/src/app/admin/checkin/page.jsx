@@ -395,9 +395,11 @@ export default function StatusManagementPage() {
                                                 textAlign: 'left',
                                                 fontWeight: p.memo ? '600' : '400',
                                                 fontSize: '12px',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
+                                                whiteSpace: 'normal',
+                                                wordWrap: 'break-word',
+                                                minHeight: '36px',
+                                                display: 'flex',
+                                                alignItems: 'center',
                                             }}
                                             title="클릭하여 메모 수정"
                                         >
@@ -481,9 +483,11 @@ export default function StatusManagementPage() {
                                                 textAlign: 'left',
                                                 fontWeight: p.checkedOutMemo ? '600' : '400',
                                                 fontSize: '12px',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
+                                                whiteSpace: 'normal',
+                                                wordWrap: 'break-word',
+                                                minHeight: '36px',
+                                                display: 'flex',
+                                                alignItems: 'center',
                                             }}
                                             title="클릭하여 메모 수정"
                                         >
