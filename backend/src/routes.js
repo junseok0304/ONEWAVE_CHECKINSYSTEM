@@ -241,15 +241,16 @@ router.put('/participants/:participantId', verifyPassword, async (req, res) => {
     }
 
     try {
-        // 1. 일반 참가자 검색
-        let doc = await db.collection('participants_checkin').doc(participantId).get();
-        let collection = 'participants_checkin';
+        // 1. 운영진 먼저 검색 (운영진이 priority)
+        let doc = await db.collection('participants_admin').doc(participantId).get();
+        let collection = 'participants_admin';
         let isAdmin = false;
 
-        // 2. 없으면 운영진 검색
+        // 2. 없으면 일반 참가자 검색
         if (!doc.exists) {
-            doc = await db.collection('participants_admin').doc(participantId).get();
-            collection = 'participants_admin';
+            doc = await db.collection('participants_checkin').doc(participantId).get();
+            collection = 'participants_checkin';
+        } else {
             isAdmin = true;
         }
 
