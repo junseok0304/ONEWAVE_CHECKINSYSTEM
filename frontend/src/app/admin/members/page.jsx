@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { useMembers, useCreateMember, useUpdateMember, useDeleteMember } from '@/hooks/useMembers';
+import { useTypes } from '@/hooks/useTypes';
 import { formatPhoneNumber } from '@/lib/format';
-import { DEFAULT_TYPES } from '@/constants/types';
 import styles from './members.module.css';
 
 export default function MembersPage() {
     const { data, isLoading } = useMembers();
+    const { data: allTypes = [] } = useTypes();
     const createMember = useCreateMember();
     const updateMember = useUpdateMember();
     const deleteMember = useDeleteMember();
@@ -211,7 +212,7 @@ export default function MembersPage() {
                 >
                     전체 ({members.length}명)
                 </button>
-                {DEFAULT_TYPES.map(type => {
+                {allTypes.map(type => {
                     const count = members.filter(m => {
                         const memberTypes = Array.isArray(m.type) ? m.type : (m.type ? [m.type] : ['allMembers']);
                         return memberTypes.includes(type);
@@ -399,7 +400,7 @@ export default function MembersPage() {
                             <div className={styles.formGroup}>
                                 <label>멤버 타입</label>
                                 <div className={styles.typeCheckboxes}>
-                                    {DEFAULT_TYPES.map(type => (
+                                    {allTypes.map(type => (
                                         <label key={type} className={styles.checkboxLabel}>
                                             <input
                                                 type="checkbox"

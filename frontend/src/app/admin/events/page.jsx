@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEvents, useCreateEvent, useDeleteEvent } from '@/hooks/useEvents';
-import { DEFAULT_TYPES } from '@/constants/types';
+import { useTypes } from '@/hooks/useTypes';
 import styles from './events.module.css';
 
 export default function EventsPage() {
     const router = useRouter();
     const { data, isLoading, refetch } = useEvents();
+    const { data: allTypes = [] } = useTypes();
     const createEvent = useCreateEvent();
     const deleteEvent = useDeleteEvent();
     const [showModal, setShowModal] = useState(false);
@@ -127,7 +128,7 @@ export default function EventsPage() {
                                     value={formData.eventType}
                                     onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
                                 >
-                                    {DEFAULT_TYPES.map((type) => (
+                                    {allTypes.map((type) => (
                                         <option key={type} value={type}>
                                             {type}
                                         </option>

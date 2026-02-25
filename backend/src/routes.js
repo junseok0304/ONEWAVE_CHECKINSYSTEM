@@ -35,6 +35,51 @@ const searchLimiter = rateLimit({
 
 router.get('/', (req, res) => res.json({ message: 'QRCheckin API Online' }));
 
+// 모든 타입 조회 (기본 타입 + 커스텀 타입)
+router.get('/types', async (req, res) => {
+    try {
+        const configDoc = await db.collection('config').doc('types').get();
+        const customTypes = configDoc.exists ? (configDoc.data().customTypes || []) : [];
+        const allTypes = [...DEFAULT_TYPES, ...customTypes];
+        res.json({ types: allTypes, custom: customTypes });
+    } catch (error) {
+        console.error('Get types error:', error);
+        res.status(500).json({ message: '타입 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+// 새 타입 추가 (인증 필요)
+router.post('/types', verifyPassword, async (req, res) => {
+    try {
+        const { typeName } = req.body;
+
+        if (!typeName || typeof typeName !== 'string') {
+            return res.status(400).json({ message: '타입명을 입력해주세요.' });
+        }
+
+        // 기본 타입이나 이미 존재하는 커스텀 타입인지 확인
+        if (DEFAULT_TYPES.includes(typeName)) {
+            return res.status(400).json({ message: '이미 존재하는 타입입니다.' });
+        }
+
+        const configDoc = await db.collection('config').doc('types').get();
+        let customTypes = configDoc.exists ? (configDoc.data().customTypes || []) : [];
+
+        if (customTypes.includes(typeName)) {
+            return res.status(400).json({ message: '이미 존재하는 타입입니다.' });
+        }
+
+        customTypes.push(typeName);
+        await db.collection('config').doc('types').set({ customTypes }, { merge: true });
+
+        const allTypes = [...DEFAULT_TYPES, ...customTypes];
+        res.json({ success: true, types: allTypes });
+    } catch (error) {
+        console.error('Add type error:', error);
+        res.status(500).json({ message: '타입 추가 중 오류가 발생했습니다.' });
+    }
+});
+
 // Firebase Timestamp를 ISO 문자열로 변환
 const formatTimestamp = (timestamp) => {
     if (!timestamp) return null;
@@ -62,6 +107,9 @@ const getPhoneLast4 = (phone) => {
 
 // 3개 컬렉션 목록
 const MEMBER_COLLECTIONS = ['participants_admin', 'participants_member', 'participants_others'];
+
+// 기본 타입 목록
+const DEFAULT_TYPES = ['allMembers', 'gdgSKHU', 'gdgsswu', 'gdgSWU', 'TripleS', 'legend', '2026스쿠톤'];
 
 // 특정 phoneKey로 멤버 검색 (3개 컬렉션에서)
 const findMemberByPhoneKey = async (phoneKey) => {

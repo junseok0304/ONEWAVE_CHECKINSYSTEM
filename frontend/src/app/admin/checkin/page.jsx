@@ -2,17 +2,18 @@
 
 import { useState } from 'react';
 import { useMembers, useUpdateMember } from '@/hooks/useMembers';
-import { DEFAULT_TYPES } from '@/constants/types';
+import { useTypes, useAddType } from '@/hooks/useTypes';
 import styles from './types.module.css';
 
 export default function TypeManagementPage() {
     const { data, isLoading } = useMembers();
+    const { data: allTypes = [], isLoading: isTypesLoading } = useTypes();
     const updateMember = useUpdateMember();
+    const addType = useAddType();
 
     const [selectedType, setSelectedType] = useState('allMembers');
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
     const [selectedMembersToAdd, setSelectedMembersToAdd] = useState([]);
-    const [customTypes, setCustomTypes] = useState([]);
     const [showAddTypeModal, setShowAddTypeModal] = useState(false);
     const [newTypeName, setNewTypeName] = useState('');
 
@@ -36,8 +37,6 @@ export default function TypeManagementPage() {
         return !m.type.includes(selectedType) && selectedType !== 'allMembers';
     }).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko-KR'));
 
-    // 전체 타입 (기본 + 커스텀)
-    const allTypes = [...DEFAULT_TYPES, ...customTypes];
 
     // 타입별 멤버 수
     const getTypeCount = (type) => {
@@ -47,7 +46,7 @@ export default function TypeManagementPage() {
     };
 
     // 새 타입 추가
-    const handleAddType = () => {
+    const handleAddType = async () => {
         if (!newTypeName.trim()) {
             alert('타입명을 입력해주세요.');
             return;
@@ -58,10 +57,14 @@ export default function TypeManagementPage() {
             return;
         }
 
-        setCustomTypes([...customTypes, newTypeName]);
-        setNewTypeName('');
-        setShowAddTypeModal(false);
-        alert('새 타입이 추가되었습니다.');
+        try {
+            await addType.mutateAsync({ typeName: newTypeName });
+            setNewTypeName('');
+            setShowAddTypeModal(false);
+            alert('새 타입이 추가되었습니다.');
+        } catch (error) {
+            alert(error.message || '타입 추가 중 오류가 발생했습니다.');
+        }
     };
 
     // 멤버를 타입에서 제거
@@ -120,7 +123,7 @@ export default function TypeManagementPage() {
         }
     };
 
-    if (isLoading) return <div className={styles.loading}>로딩 중...</div>;
+    if (isLoading || isTypesLoading) return <div className={styles.loading}>로딩 중...</div>;
 
     return (
         <div className={styles.container}>

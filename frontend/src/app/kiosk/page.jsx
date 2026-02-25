@@ -76,7 +76,7 @@ export default function KioskMainPage() {
                     <div className={styles.card}>
                         <div className={styles.icon}>
                             <img
-                                src="/GDGoClogo.png"
+                                src="/GDGoC25logo.png"
                                 alt="GDG"
                                 style={{
                                     maxWidth: '80px',
