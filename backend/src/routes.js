@@ -40,13 +40,15 @@ router.get('/', (req, res) => res.json({ message: 'QRCheckin API Online' }));
 
 // 모든 타입 조회 (기본 타입 + 커스텀 타입)
 router.get('/types', async (req, res) => {
+    console.log('✅ /api/types 요청 받음');
     try {
         const configDoc = await db.collection('config').doc('types').get();
         const customTypes = configDoc.exists ? (configDoc.data().customTypes || []) : [];
         const allTypes = [...DEFAULT_TYPES, ...customTypes];
+        console.log('📤 타입 응답:', allTypes);
         res.json({ types: allTypes, custom: customTypes });
     } catch (error) {
-        console.error('Get types error:', error);
+        console.error('❌ Get types error:', error);
         res.status(500).json({ message: '타입 조회 중 오류가 발생했습니다.' });
     }
 });
