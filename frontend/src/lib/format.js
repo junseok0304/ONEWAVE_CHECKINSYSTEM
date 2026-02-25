@@ -17,3 +17,25 @@ export const formatPhoneNumber = (phoneNumber) => {
   // 그 외: 원본 반환
   return phoneNumber;
 };
+
+export const formatTimeKST = (isoString) => {
+  if (!isoString) return '-';
+
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return '-';
+
+    // KST (UTC+9)로 표시
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+  } catch (error) {
+    return '-';
+  }
+};

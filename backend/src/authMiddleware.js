@@ -13,6 +13,14 @@ export const verifyPassword = (req, res, next) => {
     const master = process.env.MASTER_PASSWORD?.trim().replace(/^["']|["']$/g, '');
     const kiosk = process.env.KIOSK_PASSWORD?.trim().replace(/^["']|["']$/g, '');
 
+    console.log('[AUTH DEBUG]', {
+        token,
+        master,
+        kiosk,
+        masterMatch: token === master,
+        kioskMatch: token === kiosk
+    });
+
     const validPasswords = [master, kiosk];
 
     if (!validPasswords.includes(token)) {

@@ -147,7 +147,7 @@ export default function SuccessPage() {
                     </div>
 
                     <div className={styles.leftDesc}>
-                        감사합니다! 해커톤을 즐겨주세요.
+                        감사합니다! GDG 행사를 즐겨주세요.
                     </div>
                 </div>
 
@@ -170,7 +170,7 @@ export default function SuccessPage() {
                         </div>
 
                         <div className={styles.desc}>
-                            즐거운 개발 되세요!
+                            유익한 행사되세요!
                         </div>
 
                         <div className={styles.timer}>

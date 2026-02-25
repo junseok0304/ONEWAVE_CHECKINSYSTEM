@@ -73,7 +73,7 @@ export default function AdminLayout({ children }) {
                         fontWeight: '800',
                         color: '#1d2244',
                     }}>
-                        ONEWAVE HACKATHON
+                        GDG 체크인
                     </h1>
                     <p style={{
                         textAlign: 'center',
@@ -182,7 +182,7 @@ export default function AdminLayout({ children }) {
             <nav className={styles.nav}>
                 <div className={styles.navInner}>
                     <Link href="/admin" className={styles.brand}>
-                        ONEWAVE HACKATHON
+                        GDG 체크인
                     </Link>
 
                     <div className={styles.links}>
@@ -190,10 +190,13 @@ export default function AdminLayout({ children }) {
                             대시보드
                         </Link>
                         <Link href="/admin/checkin" className={styles.link}>
-                            상태관리
+                            타입 관리
                         </Link>
-                        <Link href="/admin/realtime" className={styles.link}>
-                            실시간 체크인 현황
+                        <Link href="/admin/events" className={styles.link}>
+                            이벤트 관리
+                        </Link>
+                        <Link href="/admin/members" className={styles.link}>
+                            멤버 관리
                         </Link>
                         <button
                             onClick={handleLogout}

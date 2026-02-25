@@ -108,7 +108,7 @@ export default function CheckinPage() {
 
             const data = await res.json();
             console.log('API Response:', data);
-            setCandidates(data);
+            setCandidates(data.results || []);
             setStep('select');
         } catch (err) {
             setError('네트워크 오류가 발생했습니다.');
@@ -118,7 +118,7 @@ export default function CheckinPage() {
     };
 
     const handleSelectParticipant = (participant) => {
-        if (participant.checked_in_status) {
+        if (participant.isCheckedIn) {
             setError('이미 체크인된 참가자입니다.');
             return;
         }
@@ -146,7 +146,7 @@ export default function CheckinPage() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ participantId: selectedParticipant.id }),
+                body: JSON.stringify({ phoneKey: selectedParticipant.phoneKey }),
             });
 
             if (res.status === 409) {
@@ -161,8 +161,8 @@ export default function CheckinPage() {
                 return;
             }
 
-            // 운영진인지 확인 (team_number === 0)
-            const isStaff = selectedParticipant.team_number === 0 || selectedParticipant.team_number === '0';
+            // 운영진인지 확인 (isStaff 플래그)
+            const isStaff = selectedParticipant.isStaff || false;
 
             // 음성 재생 시작 (볼륨 페이드인)
             const audioSrc = isStaff ? '/correctAdmin.mp3' : '/correct.mp3';
@@ -193,8 +193,8 @@ export default function CheckinPage() {
         confirm: '선택한 참가자가 맞으면 "네"를 눌러 체크인을 완료합니다.',
     };
 
-    const isStaffConfirm = step === 'confirm' && selectedParticipant && (selectedParticipant.team_number === 0 || selectedParticipant.team_number === '0');
-    const leftText = isStaffConfirm ? { a: '운영진님', b: '해커톤', c: '잘부탁드립니다!' } : leftTextByStep[step];
+    const isStaffConfirm = step === 'confirm' && selectedParticipant && (selectedParticipant.isStaff || false);
+    const leftText = isStaffConfirm ? { a: '운영진님', b: 'GDG 행사', c: '잘부탁드립니다!' } : leftTextByStep[step];
 
     const isSelectStep = step === 'select';
     const isCandidateMany = candidates.length > 1;
@@ -365,30 +365,25 @@ export default function CheckinPage() {
                                     <div className={styles.candidateList}>
                                         {candidates.map((candidate) => (
                                             <button
-                                                key={candidate.id}
+                                                key={candidate.phoneKey}
                                                 type="button"
-                                                className={`${styles.candidateBtn} ${candidate.checked_in_status ? styles.candidateDisabled : ''}`}
+                                                className={`${styles.candidateBtn} ${candidate.isCheckedIn ? styles.candidateDisabled : ''}`}
                                                 onClick={() => handleSelectParticipant(candidate)}
-                                                disabled={candidate.checked_in_status}
+                                                disabled={candidate.isCheckedIn}
                                             >
                                                 <div className={styles.candidateRow}>
-                                                    <div className={styles.discordCircle} title={candidate.status?.trim() === 'APPROVED' ? '가입함' : candidate.status?.trim() === 'PENDING' ? '확인중' : '거절됨'}>
-                                                        <div className={`${styles.circle} ${candidate.status?.trim() === 'APPROVED' ? styles.approved : candidate.status?.trim() === 'PENDING' ? styles.pending : styles.rejected}`}>
-                                                        </div>
-                                                    </div>
-
                                                     <div className={styles.candidateName}>
                                                         {candidate.name}
                                                     </div>
 
                                                     <div className={styles.badgeContainer}>
-                                                        {(candidate.team_number === 0 || candidate.team_number === '0') && (
+                                                        {candidate.isStaff && (
                                                             <div className={styles.staffBadge}>
                                                                 STAFF
                                                             </div>
                                                         )}
 
-                                                        {candidate.checked_in_status && (
+                                                        {candidate.isCheckedIn && (
                                                             <div className={styles.badge}>
                                                                 이미 체크인됨
                                                             </div>
@@ -402,14 +397,14 @@ export default function CheckinPage() {
 
                                 <button
                                     type="button"
-                                    className={styles.secondaryBtn}
+                                    className={styles.goBackBtn}
                                     onClick={() => {
                                         setStep('phone');
                                         setCandidates([]);
                                         setError('');
                                     }}
                                 >
-                                    돌아가기
+                                    ← 번호 다시 입력
                                 </button>
                             </>
                         )}
@@ -421,7 +416,7 @@ export default function CheckinPage() {
                                 </div>
 
                                 <div className={styles.confirmDesc}>
-                                    {(selectedParticipant.team_number === 0 || selectedParticipant.team_number === '0')
+                                    {(selectedParticipant.isStaff || false)
                                         ? `운영진 ${selectedParticipant.name} 님이 맞습니까?`
                                         : '위 이름이 맞습니까?'}
                                 </div>

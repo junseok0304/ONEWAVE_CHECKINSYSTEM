@@ -2,9 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import rateLimit from 'express-rate-limit';
 import router from './routes.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 app.use(express.json());
@@ -32,9 +38,27 @@ app.use(cors({
 }));
 
 app.use(morgan('dev'));
+
+// 전역 Rate Limiter
+const globalLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5분
+    max: 2000, // 5분에 2000개 요청 허용 (매우 관대)
+    message: { message: '전역 요청 한도를 초과했습니다.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => {
+        // 로컬 개발 환경에서는 Rate Limiting 무시
+        if (req.hostname === 'localhost' || req.hostname === '127.0.0.1') {
+            return true;
+        }
+        return false;
+    },
+});
+
+app.use(globalLimiter);
 app.use('/api', router);
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8081;
 app.listen(PORT, () => {
     console.log(`✅ QRCheckin backend running on port ${PORT}`);
 });

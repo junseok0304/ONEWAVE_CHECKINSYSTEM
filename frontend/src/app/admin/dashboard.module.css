@@ -1,504 +1,242 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
-
 .wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .loadingWrap {
-    text-align: center;
-    padding: 40px;
-    font-size: 16px;
-    font-weight: 700;
-    color: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 500px;
+    font-size: 18px;
+    color: #666;
 }
 
+/* Header */
 .header {
     display: flex;
-    align-items: flex-end;
     justify-content: space-between;
-    gap: 20px;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    gap: 24px;
 }
 
 .title {
-    font-size: 34px;
-    font-weight: 900;
-    letter-spacing: -0.04em;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1d2244;
+    margin-bottom: 8px;
 }
 
 .subtitle {
-    margin-top: 8px;
-    font-size: 15px;
-    font-weight: 650;
-    color: rgba(0, 0, 0, 0.55);
-    letter-spacing: -0.01em;
-}
-
-.refreshBtn {
-    height: 52px;
-    padding: 0 18px;
-    border: none;
-    border-radius: 14px;
-    cursor: pointer;
-    background: var(--color-primary);
-    color: #fff;
-    font-size: 15px;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    box-shadow: 0 10px 18px rgba(50, 130, 246, 0.25);
-    transition: 0.15s ease;
-}
-
-.refreshBtn:hover {
-    opacity: 0.92;
-}
-
-.disabled {
-    background: #cfd8e6 !important;
-    cursor: not-allowed !important;
-    box-shadow: none !important;
-    opacity: 0.95 !important;
+    font-size: 14px;
+    color: #666;
 }
 
 .buttonGroup {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
-}
-
-.lastUpdate {
-    font-size: 13px;
-    font-weight: 600;
-    color: rgba(0, 0, 0, 0.55);
-    letter-spacing: -0.01em;
-    white-space: nowrap;
-}
-
-.errorBox {
-    padding: 14px 16px;
-    border-radius: 14px;
-    background: rgba(220, 53, 69, 0.10);
-    color: rgba(220, 53, 69, 0.95);
-    font-size: 15px;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-}
-
-.statsGrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-}
-
-.statCard {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow);
-    padding: 14px;
-    display: flex;
-    gap: 12px;
-    align-items: stretch;
-}
-
-.statNumberSection {
-    display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 40px;
-    font-weight: 950;
-    letter-spacing: -0.04em;
-    flex: 1;
-    min-width: 60px;
-}
-
-.statTextSection {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2px;
-    flex: 1;
-}
-
-.statLabel {
-    font-size: 13px;
-    font-weight: 800;
-    color: rgba(0, 0, 0, 0.65);
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-}
-
-.statUnit {
-    font-size: 10px;
-    font-weight: 700;
-    color: rgba(0, 0, 0, 0.40);
-    letter-spacing: -0.01em;
-}
-
-.statMeta {
-    font-size: 10px;
-    font-weight: 800;
-    color: rgba(0, 0, 0, 0.40);
-    letter-spacing: -0.01em;
-}
-
-.statNumberSection.good {
-    color: #16a34a;
-}
-
-.statNumberSection.danger {
-    color: #dc3545;
-}
-
-.good {
-    color: #16a34a;
-}
-
-.danger {
-    color: #dc3545;
-}
-
-.progressCard {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow);
-    padding: 22px;
-}
-
-.progressTop {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 14px;
-    margin-bottom: 12px;
-}
-
-.progressTitle {
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-}
-
-.progressPercent {
-    font-size: 16px;
-    font-weight: 900;
-    color: rgba(0, 0, 0, 0.55);
-}
-
-.progressTrack {
-    width: 100%;
-    height: 16px;
-    background: rgba(29, 34, 68, 0.08);
-    border-radius: 999px;
-    overflow: hidden;
-}
-
-.progressBar {
-    height: 100%;
-    border-radius: 999px;
-    transition: width 0.3s ease;
-}
-
-.progressDanger {
-    background: #ef4444;
-}
-
-.progressWarn {
-    background: #f59e0b;
-}
-
-.progressGood {
-    background: #22c55e;
-}
-
-.progressHint {
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: 650;
-    color: rgba(0, 0, 0, 0.55);
-    letter-spacing: -0.01em;
-}
-
-.quickHeader {
-    margin-top: 4px;
-}
-
-.quickTitle {
-    font-size: 22px;
-    font-weight: 950;
-    letter-spacing: -0.03em;
-}
-
-.quickDesc {
-    margin-top: 6px;
-    font-size: 14px;
-    font-weight: 650;
-    color: rgba(0, 0, 0, 0.55);
-    letter-spacing: -0.01em;
-}
-
-.quickGrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-}
-
-.quickCard {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow);
-    padding: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    transition: 0.15s ease;
-}
-
-.quickCard:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 14px 30px rgba(29, 34, 68, 0.10);
-    border-color: rgba(50, 130, 246, 0.35);
-}
-
-.quickIcon {
-    font-size: 28px;
-    line-height: 1;
-}
-
-.quickName {
-    font-size: 18px;
-    font-weight: 950;
-    letter-spacing: -0.02em;
-}
-
-.quickText {
-    font-size: 14px;
-    font-weight: 650;
-    color: rgba(0, 0, 0, 0.55);
-    letter-spacing: -0.01em;
-}
-
-.quickMeta {
-    margin-top: 6px;
-    font-size: 14px;
-    font-weight: 850;
-    color: var(--color-primary);
-    letter-spacing: -0.01em;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.arrow {
-    font-weight: 950;
-}
-
-.recentSection {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow);
-    padding: 22px;
-}
-
-.recentTitle {
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    margin-bottom: 16px;
-}
-
-.emptyState {
-    text-align: center;
-    padding: 40px;
-    color: rgba(0, 0, 0, 0.45);
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-}
-
-.clocksGrid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 8px;
-}
-
-.clockCard {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow);
-    padding: 20px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.clockHeader {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.clockLabel {
-    font-size: 16px;
-    font-weight: 800;
-    color: rgba(0, 0, 0, 0.65);
-    letter-spacing: -0.01em;
-}
-
-.clockContent {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    align-items: flex-start;
-}
-
-.clockTime {
-    font-size: 44px;
-    font-weight: 950;
-    letter-spacing: -0.04em;
-    font-family: 'Pretendard', sans-serif;
-    line-height: 1;
-}
-
-.clockDate {
-    font-size: 13px;
-    font-weight: 600;
-    color: rgba(0, 0, 0, 0.55);
-    letter-spacing: -0.01em;
-    margin: 0;
-}
-
-.eventContent {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 280px;
-}
-
-.eventTimes {
-    display: flex;
     gap: 16px;
 }
 
-.eventTimeItem {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.refreshBtn {
+    padding: 12px 24px;
+    background: #3282f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.eventTimeLabel {
+.refreshBtn:hover:not(.disabled) {
+    background: #2d6fd9;
+    box-shadow: 0 4px 8px rgba(50, 130, 246, 0.3);
+}
+
+.refreshBtn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.lastUpdate {
     font-size: 12px;
-    font-weight: 700;
-    color: rgba(0, 0, 0, 0.55);
-    letter-spacing: -0.01em;
+    color: #999;
+    white-space: nowrap;
 }
 
-.eventTime {
+/* Error Box */
+.errorBox {
+    padding: 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #dc2626;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+/* Summary Grid */
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.summaryCard {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #3282f6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summaryCard.checkedIn {
+    border-left-color: #22c55e;
+}
+
+.summaryCard.notCheckedIn {
+    border-left-color: #ef4444;
+}
+
+.summaryLabel {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.summaryValue {
     font-size: 32px;
-    font-weight: 950;
-    letter-spacing: -0.03em;
-    font-family: 'Pretendard', sans-serif;
-    line-height: 1;
+    font-weight: 700;
+    color: #1d2244;
 }
 
-.progressTrack {
+/* Section */
+.section {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.sectionHeader h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1d2244;
+}
+
+.seeAllLink {
+    color: #3282f6;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.seeAllLink:hover {
+    color: #2d6fd9;
+}
+
+/* Table */
+.table {
     width: 100%;
-    height: 8px;
-    background: rgba(29, 34, 68, 0.08);
-    border-radius: 999px;
-    overflow: hidden;
+    border-collapse: collapse;
 }
 
-.progressBar {
-    height: 100%;
-    border-radius: 999px;
-    transition: width 0.3s ease, background-color 0.3s ease;
+.table th,
+.table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 13px;
 }
 
-.progressPercent {
-    font-size: 16px;
-    font-weight: 900;
-    color: rgba(0, 0, 0, 0.55);
-    letter-spacing: -0.02em;
-    text-align: right;
+.table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
 }
 
-@media (max-width: 980px) {
-    .statsGrid {
-        grid-template-columns: 1fr;
-    }
+.table tbody tr:hover {
+    background: #fafbfc;
+}
 
-    .quickGrid {
-        grid-template-columns: 1fr;
+.table td strong {
+    color: #1d2244;
+}
+
+.pendingRow {
+    background: #fffbeb;
+}
+
+.pendingRow:hover {
+    background: #fef3c7;
+}
+
+/* Empty State */
+.emptyState {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 14px;
+}
+
+/* More Info */
+.moreInfo {
+    text-align: center;
+    padding: 12px;
+    color: #666;
+    font-size: 12px;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wrap {
+        padding: 16px;
     }
 
     .header {
         flex-direction: column;
-        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .buttonGroup {
+        width: 100%;
+        flex-direction: column;
     }
 
     .refreshBtn {
         width: 100%;
     }
 
-    .buttonGroup {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        gap: 12px;
+    .summaryGrid {
+        grid-template-columns: 1fr 1fr;
     }
 
-    .lastUpdate {
+    .table {
         font-size: 12px;
     }
 
-    .statsGrid {
-        grid-template-columns: 1fr;
-    }
-
-    .statCard {
-        gap: 10px;
-    }
-
-    .statNumberSection {
-        font-size: 36px;
-    }
-
-    .statLabel {
-        font-size: 12px;
-    }
-
-    .clocksGrid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-
-    .clockCard {
-        padding: 16px 18px;
-    }
-
-    .clockTime {
-        font-size: 32px;
-    }
-
-    .clockDate {
-        font-size: 12px;
-    }
-
-    .eventContent {
-        min-width: auto;
-    }
-
-    .eventTime {
-        font-size: 26px;
+    .table th,
+    .table td {
+        padding: 8px;
     }
 }

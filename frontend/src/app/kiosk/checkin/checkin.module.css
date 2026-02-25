@@ -3,7 +3,7 @@
    ============================================ */
 :root {
   --color-primary: #3282f6;
-  --color-accent: #7AC143;
+  --color-accent: #2563eb;
   --color-text-primary: #0A0A0A;
   --color-text-secondary: #4a4a4a;
   --bg-light: #f5f7fa;
@@ -61,8 +61,8 @@
 }
 
 .left {
-  background: linear-gradient(135deg, #ffffff 0%, rgba(122, 193, 67, 0.12) 100%);
-  border-right: 2px solid rgba(122, 193, 67, 0.15);
+  background: linear-gradient(135deg, #ffffff 0%, rgba(37, 99, 235, 0.12) 100%);
+  border-right: 2px solid rgba(37, 99, 235, 0.15);
   padding-left: clamp(20px, 4vw, 40px);
   padding-right: clamp(20px, 3vw, 32px);
   padding-top: clamp(24px, 5vw, 48px);
@@ -121,7 +121,7 @@
   background: #ffffff;
   border-radius: var(--radius-default);
   box-shadow: 0 18px 40px rgba(10, 10, 10, 0.12);
-  border: 1px solid rgba(122, 193, 67, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.08);
   padding: clamp(32px, 4vw, 42px);
   box-sizing: border-box;
   display: flex;
@@ -156,7 +156,7 @@
    ============================================ */
 
 .cardTitle {
-    font-size: clamp(22px, 2.5vh, 32px);
+    font-size: clamp(26px, 3.2vh, 40px);
     font-weight: 950;
     color: var(--color-accent);
     letter-spacing: -0.03em;
@@ -198,7 +198,7 @@
 .input {
     width: 100%;
     height: clamp(68px, 7vh, 84px);
-    border: 2px solid rgba(122, 193, 67, 0.6);
+    border: 2px solid rgba(37, 99, 235, 0.6);
     border-radius: 16px;
     font-size: clamp(20px, 1.8vw, 28px);
     font-weight: 950;
@@ -215,7 +215,7 @@
 .input:focus {
     border-color: var(--color-accent);
     background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(122, 193, 67, 0.15);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
 .input::placeholder {
@@ -260,13 +260,13 @@
     font-weight: 950;
     letter-spacing: -0.02em;
     transition: all var(--transition-fast);
-    box-shadow: 0 12px 28px rgba(122, 193, 67, 0.28);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.28);
 }
 
 .primaryBtn:hover {
     opacity: 0.88;
     transform: translateY(-3px);
-    box-shadow: 0 16px 36px rgba(122, 193, 67, 0.38);
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.38);
 }
 
 .primaryBtn:active {
@@ -287,7 +287,10 @@
 .candidateScrollArea {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding-right: 8px;
+    padding-top: clamp(4px, 0.6vh, 8px);
+    padding-bottom: clamp(4px, 0.6vh, 8px);
     margin-top: clamp(4px, 0.5vh, 8px);
     margin-bottom: 0;
 }
@@ -309,12 +312,12 @@
 }
 
 .candidateScrollArea::-webkit-scrollbar-thumb {
-    background: rgba(122, 193, 67, 0.35);
+    background: rgba(37, 99, 235, 0.35);
     border-radius: 999px;
 }
 
 .candidateScrollArea::-webkit-scrollbar-track {
-    background: rgba(122, 193, 67, 0.08);
+    background: rgba(37, 99, 235, 0.08);
     border-radius: 999px;
 }
 
@@ -329,8 +332,8 @@
 
 .candidateBtn {
     width: 100%;
-    border: 2px solid rgba(122, 193, 67, 0.25);
-    background: #ffffff;
+    border: 2px solid rgba(37, 99, 235, 0.35);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.04) 100%);
     border-radius: 16px;
     padding: clamp(16px, 2vh, 24px) clamp(12px, 1.5vh, 16px);
     cursor: pointer;
@@ -338,16 +341,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
 }
 
 .candidateBtn:hover {
-    border-color: rgba(122, 193, 67, 0.5);
-    background: rgba(122, 193, 67, 0.06);
-    transform: translateX(4px);
+    border-color: var(--color-accent);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.18) 0%, rgba(37, 99, 235, 0.12) 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2);
 }
 
 .candidateBtn:active {
-    transform: translateX(2px);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
 .candidateDisabled {
@@ -370,33 +376,11 @@
 .candidateRow {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: clamp(12px, 1.5vh, 16px);
     width: 100%;
 }
 
-.discordCircle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.circle {
-    width: clamp(20px, 2.5vh, 28px);
-    height: clamp(20px, 2.5vh, 28px);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 950;
-}
-
-.circle.approved {
-    background: #5865f2;
-    color: #ffffff;
-}
 
 .circle.pending {
     background: #a6a6a6;
@@ -409,12 +393,13 @@
 }
 
 .candidateName {
-    font-size: clamp(22px, 2.6vh, 36px);
+    font-size: clamp(26px, 3.2vh, 42px);
     font-weight: 900;
     letter-spacing: -0.02em;
     color: var(--text-black);
-    flex: 1;
-    text-align: left;
+    flex: 0 1 auto;
+    text-align: center;
+    margin-left: clamp(10px, 2vw, 20px);
 }
 
 .badgeContainer {
@@ -422,6 +407,7 @@
     gap: clamp(8px, 1vh, 12px);
     align-items: center;
     flex-shrink: 0;
+    margin-left: auto;
 }
 
 .discordBadge {
@@ -518,13 +504,13 @@
 
 .secondary {
     background: #ffffff;
-    border: 2px solid rgba(122, 193, 67, 0.3);
+    border: 2px solid rgba(37, 99, 235, 0.3);
     color: var(--text-black);
 }
 
 .secondary:hover {
-    background: rgba(122, 193, 67, 0.08);
-    border-color: rgba(122, 193, 67, 0.5);
+    background: rgba(37, 99, 235, 0.08);
+    border-color: rgba(37, 99, 235, 0.5);
 }
 
 .secondary:active {
@@ -540,32 +526,72 @@
     font-weight: 950;
     letter-spacing: -0.02em;
     background: #ffffff;
-    border: 2px solid rgba(122, 193, 67, 0.3);
+    border: 2px solid rgba(37, 99, 235, 0.3);
     color: var(--text-black);
     transition: all var(--transition-fast);
     margin-top: clamp(14px, 1.8vh, 20px);
 }
 
 .secondaryBtn:hover {
-    background: rgba(122, 193, 67, 0.08);
-    border-color: rgba(122, 193, 67, 0.5);
+    background: rgba(37, 99, 235, 0.08);
+    border-color: rgba(37, 99, 235, 0.5);
 }
 
 .secondaryBtn:active {
     transform: scale(0.97);
 }
 
+/* 돌아가기 버튼 - 미니멀 스타일 */
+.goBackBtn {
+    width: clamp(300px, 70%, 450px);
+    height: clamp(52px, 6vh, 64px);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: clamp(14px, 1.6vh, 18px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    background: #f5f5f5;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #666666;
+    transition: all var(--transition-fast);
+    margin-top: clamp(24px, 3vh, 32px);
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    padding: 0 clamp(16px, 2vw, 24px);
+    align-self: center;
+}
+
+.goBackBtn:hover {
+    background: #e8e8e8;
+    border-color: rgba(0, 0, 0, 0.15);
+    color: #444444;
+}
+
+.goBackBtn:active {
+    transform: scale(0.98);
+}
+
+/* 두 명 이상 검색되었을 때 (tall) - 갭 줄이기 */
+.cardSelectTall .goBackBtn {
+    margin-top: 0;
+}
+
 .primary {
     background: var(--color-accent);
     color: #ffffff;
     border: none;
-    box-shadow: 0 10px 24px rgba(122, 193, 67, 0.28);
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
 }
 
 .primary:hover {
     opacity: 0.88;
     transform: translateY(-2px);
-    box-shadow: 0 14px 32px rgba(122, 193, 67, 0.35);
+    box-shadow: 0 14px 32px rgba(37, 99, 235, 0.35);
 }
 
 .primary:active {
@@ -586,7 +612,7 @@
 .phoneInput {
     width: 100%;
     height: clamp(68px, 7vh, 84px);
-    border: 2px solid rgba(122, 193, 67, 0.6);
+    border: 2px solid rgba(37, 99, 235, 0.6);
     border-radius: 16px;
     font-size: clamp(20px, 1.8vw, 28px);
     font-weight: 950;
@@ -603,7 +629,7 @@
 .phoneInput:focus {
     border-color: var(--color-accent);
     background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(122, 193, 67, 0.15);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
 .phoneInput::placeholder {
@@ -622,7 +648,7 @@
     padding: clamp(10px, 1.5vh, 14px);
     background: linear-gradient(135deg, rgba(245, 247, 250, 0.8) 0%, rgba(240, 244, 248, 0.5) 100%);
     border-radius: 14px;
-    border: 1px solid rgba(122, 193, 67, 0.12);
+    border: 1px solid rgba(37, 99, 235, 0.12);
     margin-top: clamp(8px, 1vh, 12px);
 }
 
@@ -644,11 +670,11 @@
 }
 
 .numpadBtn:hover {
-    background: linear-gradient(135deg, var(--color-accent) 0%, rgba(122, 193, 67, 0.9) 100%);
+    background: linear-gradient(135deg, var(--color-accent) 0%, rgba(37, 99, 235, 0.9) 100%);
     color: #ffffff;
     border-color: var(--color-accent);
     transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(122, 193, 67, 0.28);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
 }
 
 .numpadBtn:active {
@@ -674,11 +700,11 @@
 }
 
 .numpadBtnReset:hover {
-    background: linear-gradient(135deg, rgba(122, 193, 67, 0.15) 0%, rgba(122, 193, 67, 0.08) 100%);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(37, 99, 235, 0.08) 100%);
     color: var(--color-accent);
-    border-color: rgba(122, 193, 67, 0.4);
+    border-color: rgba(37, 99, 235, 0.4);
     transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(122, 193, 67, 0.15);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15);
 }
 
 .numpadBtnReset:active {

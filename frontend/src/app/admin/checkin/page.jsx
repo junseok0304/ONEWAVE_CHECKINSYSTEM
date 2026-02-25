@@ -1,517 +1,337 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
-import { useParticipants, useToggleCheckin, useToggleCheckout, useUpdateParticipantMemo, useUpdateCheckoutMemo, useRefreshParticipants } from '@/hooks/useParticipants';
-import { formatPhoneNumber } from '@/lib/format';
+import { useState } from 'react';
+import { useMembers, useUpdateMember } from '@/hooks/useMembers';
+import { DEFAULT_TYPES } from '@/constants/types';
+import styles from './types.module.css';
 
-// 상수
-const FILTER_OPTIONS = {
-    ALL: 'all',
-    UNCHECKED: 'unchecked',
-    CHECKED: 'checked',
-    CHECKEDOUT: 'checkedout',
-};
+export default function TypeManagementPage() {
+    const { data, isLoading } = useMembers();
+    const updateMember = useUpdateMember();
 
-const SORT_OPTIONS = {
-    NAME: 'name',
-    TEAM: 'team',
-};
+    const [selectedType, setSelectedType] = useState('allMembers');
+    const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+    const [selectedMembersToAdd, setSelectedMembersToAdd] = useState([]);
+    const [customTypes, setCustomTypes] = useState([]);
+    const [showAddTypeModal, setShowAddTypeModal] = useState(false);
+    const [newTypeName, setNewTypeName] = useState('');
 
-/**
- * 날짜 포맷팅
- */
-function formatDate(dateValue) {
-    if (!dateValue) return '-';
-    try {
-        const date = typeof dateValue === 'string' ? new Date(dateValue) : new Date(dateValue);
-        return isNaN(date.getTime()) ? '-' : date.toLocaleString('ko-KR');
-    } catch (e) {
-        return '-';
-    }
-}
+    // 모든 멤버가 최소한 allMembers를 가지도록 정규화
+    const normalizedMembers = (data?.members || []).map(m => ({
+        ...m,
+        type: Array.isArray(m.type) && m.type.length > 0
+            ? m.type
+            : (m.type ? [m.type] : ['allMembers'])
+    }));
 
-export default function StatusManagementPage() {
-    const { data: participants = [], isLoading, error } = useParticipants();
-    const toggleCheckin = useToggleCheckin();
-    const toggleCheckout = useToggleCheckout();
-    const updateParticipantMemo = useUpdateParticipantMemo();
-    const updateCheckoutMemo = useUpdateCheckoutMemo();
-    const refreshParticipants = useRefreshParticipants();
+    const members = normalizedMembers;
 
-    // 필터 및 정렬
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState(FILTER_OPTIONS.ALL);
-    const [sortBy, setSortBy] = useState(SORT_OPTIONS.TEAM);
+    // 선택된 타입에 속한 멤버들
+    const membersInType = members.filter(m => {
+        return m.type.includes(selectedType);
+    }).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko-KR'));
 
-    // 메모 편집
-    const [editingId, setEditingId] = useState(null);
-    const [editingMemo, setEditingMemo] = useState('');
-    const [editingMemoType, setEditingMemoType] = useState(null); // 'participant' or 'checkout'
+    // 선택된 타입에 속하지 않은 멤버들
+    const membersNotInType = members.filter(m => {
+        return !m.type.includes(selectedType) && selectedType !== 'allMembers';
+    }).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko-KR'));
 
-    /**
-     * 필터링 및 정렬된 참가자 목록
-     */
-    const filteredParticipants = useMemo(() => {
-        return participants
-            .filter(p => {
-                const matchesSearch = p.name?.includes(searchTerm) || p.id?.includes(searchTerm);
-                let matchesFilter = true;
+    // 전체 타입 (기본 + 커스텀)
+    const allTypes = [...DEFAULT_TYPES, ...customTypes];
 
-                if (filterStatus === FILTER_OPTIONS.UNCHECKED) {
-                    matchesFilter = !p.isCheckedIn;
-                } else if (filterStatus === FILTER_OPTIONS.CHECKED) {
-                    matchesFilter = p.isCheckedIn && !p.checkedOutAt;
-                } else if (filterStatus === FILTER_OPTIONS.CHECKEDOUT) {
-                    matchesFilter = p.checkedOutAt;
-                }
+    // 타입별 멤버 수
+    const getTypeCount = (type) => {
+        return members.filter(m => {
+            return m.type.includes(type);
+        }).length;
+    };
 
-                return matchesSearch && matchesFilter;
-            })
-            .sort((a, b) => {
-                if (sortBy === SORT_OPTIONS.TEAM) {
-                    // 팀순: 팀번호로 먼저 정렬, 같은 팀이면 이름으로 정렬
-                    const teamA = parseInt(a.team_number) || 0;
-                    const teamB = parseInt(b.team_number) || 0;
-                    if (teamA !== teamB) {
-                        return teamA - teamB;
-                    }
-                    return (a.name || '').localeCompare(b.name || '', 'ko-KR');
-                } else {
-                    // 이름순: 팀 상관없이 이름으로만 정렬
-                    return (a.name || '').localeCompare(b.name || '', 'ko-KR');
-                }
+    // 새 타입 추가
+    const handleAddType = () => {
+        if (!newTypeName.trim()) {
+            alert('타입명을 입력해주세요.');
+            return;
+        }
+
+        if (allTypes.includes(newTypeName)) {
+            alert('이미 존재하는 타입입니다.');
+            return;
+        }
+
+        setCustomTypes([...customTypes, newTypeName]);
+        setNewTypeName('');
+        setShowAddTypeModal(false);
+        alert('새 타입이 추가되었습니다.');
+    };
+
+    // 멤버를 타입에서 제거
+    const handleRemoveMember = async (member) => {
+        if (!confirm(`${member.name}을(를) ${selectedType}에서 제거하시겠습니까?`)) return;
+
+        try {
+            const newTypes = Array.isArray(member.type)
+                ? member.type.filter(t => t !== selectedType)
+                : [member.type || 'allMembers'];
+
+            await updateMember.mutateAsync({
+                phoneKey: member.phoneKey,
+                data: { type: newTypes.length > 0 ? newTypes : ['allMembers'] },
+                collection: member.collection || 'participants_member'
             });
-    }, [participants, searchTerm, filterStatus, sortBy]);
 
-    /**
-     * 메모 저장
-     */
-    const handleSaveMemo = useCallback(async (participantId) => {
+            alert('멤버가 제거되었습니다.');
+        } catch (error) {
+            alert(error.message || '오류가 발생했습니다.');
+        }
+    };
+
+    // 멤버를 타입에 추가
+    const handleAddMembers = async () => {
+        if (selectedMembersToAdd.length === 0) {
+            alert('추가할 멤버를 선택해주세요.');
+            return;
+        }
+
         try {
-            if (editingMemoType === 'participant') {
-                await updateParticipantMemo.mutateAsync({ participantId, memo: editingMemo });
-            } else if (editingMemoType === 'checkout') {
-                await updateCheckoutMemo.mutateAsync({ participantId, checkedOutMemo: editingMemo });
+            for (const phoneKey of selectedMembersToAdd) {
+                const member = members.find(m => m.phoneKey === phoneKey);
+                if (!member) continue;
+
+                const newTypes = Array.isArray(member.type)
+                    ? member.type
+                    : (member.type ? [member.type] : ['allMembers']);
+
+                if (!newTypes.includes(selectedType)) {
+                    newTypes.push(selectedType);
+                }
+
+                await updateMember.mutateAsync({
+                    phoneKey: member.phoneKey,
+                    data: { type: newTypes },
+                    collection: member.collection || 'participants_member'
+                });
             }
-            setEditingId(null);
-            setEditingMemoType(null);
-            setEditingMemo('');
-        } catch (err) {
-            alert(err.message || '저장에 실패했습니다.');
+
+            alert('멤버가 추가되었습니다.');
+            setShowAddMemberModal(false);
+            setSelectedMembersToAdd([]);
+        } catch (error) {
+            alert(error.message || '오류가 발생했습니다.');
         }
-    }, [editingMemoType, editingMemo, updateParticipantMemo, updateCheckoutMemo]);
+    };
 
-    /**
-     * 메모 편집 시작
-     */
-    const startEditMemo = useCallback((participantId, currentMemo, memoType) => {
-        setEditingId(participantId);
-        setEditingMemo(currentMemo || '');
-        setEditingMemoType(memoType);
-    }, []);
-
-    /**
-     * 체크인 토글
-     */
-    const handleToggleCheckin = useCallback(async (participantId, currentStatus) => {
-        const newStatus = !currentStatus;
-        if (!window.confirm(newStatus ? '체크인 처리하시겠습니까?' : '체크인을 취소하시겠습니까?')) {
-            return;
-        }
-
-        try {
-            await toggleCheckin.mutateAsync({ participantId, status: newStatus });
-        } catch (err) {
-            alert(err.message || '처리에 실패했습니다.');
-        }
-    }, [toggleCheckin]);
-
-    /**
-     * 체크아웃 토글
-     */
-    const handleToggleCheckout = useCallback(async (participantId, currentCheckoutStatus) => {
-        if (!window.confirm(currentCheckoutStatus ? '체크아웃을 취소하시겠습니까?' : '체크아웃 처리하시겠습니까?')) {
-            return;
-        }
-
-        try {
-            const checkedOutAt = currentCheckoutStatus ? null : new Date().toISOString();
-            await toggleCheckout.mutateAsync({ participantId, checkedOutAt });
-        } catch (err) {
-            alert(err.message || '처리에 실패했습니다.');
-        }
-    }, [toggleCheckout]);
-
-    if (isLoading) return <div style={{ padding: '20px' }}>로딩 중...</div>;
+    if (isLoading) return <div className={styles.loading}>로딩 중...</div>;
 
     return (
-        <div>
-            <h1>상태관리</h1>
+        <div className={styles.container}>
+            <div className={styles.header}>
+                <h1>타입 관리</h1>
+                <p className={styles.subtitle}>멤버들의 타입을 관리하고 분류합니다</p>
+            </div>
 
-            {error && (
-                <div style={{
-                    padding: '12px',
-                    backgroundColor: '#f8d7da',
-                    color: '#721c24',
-                    borderRadius: '4px',
-                    marginBottom: '20px',
-                }}>
-                    {error.message}
+            <div className={styles.layout}>
+                {/* 좌측: 타입 목록 */}
+                <div className={styles.typeList}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <h2 className={styles.typeListTitle}>타입 목록</h2>
+                        <button
+                            className={styles.addBtn}
+                            onClick={() => setShowAddTypeModal(true)}
+                            title="새 타입 추가"
+                            style={{ padding: '8px 12px', fontSize: '12px' }}
+                        >
+                            + 타입 추가
+                        </button>
+                    </div>
+                    <div className={styles.typeButtons}>
+                        {allTypes.map(type => (
+                            <button
+                                key={type}
+                                className={`${styles.typeButton} ${selectedType === type ? styles.active : ''}`}
+                                onClick={() => setSelectedType(type)}
+                            >
+                                <div className={styles.typeName}>{type}</div>
+                                <div className={styles.typeCount}>{getTypeCount(type)}명</div>
+                            </button>
+                        ))}
+                    </div>
+                    <p className={styles.typeInfo}>
+                        총 {allTypes.length}개 타입
+                    </p>
+                </div>
+
+                {/* 우측: 타입별 멤버 명단 */}
+                <div className={styles.memberSection}>
+                    <div className={styles.sectionHeader}>
+                        <h2>{selectedType} 멤버</h2>
+                        {selectedType !== 'allMembers' && (
+                            <button
+                                className={styles.addBtn}
+                                onClick={() => setShowAddMemberModal(true)}
+                            >
+                                + 멤버 추가
+                            </button>
+                        )}
+                    </div>
+
+                    {membersInType.length > 0 ? (
+                        <div className={styles.memberTable}>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>이름</th>
+                                        <th>전화번호</th>
+                                        <th>파트</th>
+                                        <th>학교</th>
+                                        <th>분류</th>
+                                        {selectedType !== 'allMembers' && <th>작업</th>}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {membersInType.map(member => (
+                                        <tr key={`${member.phoneKey}-${member.collection}`}>
+                                            <td><strong>{member.name}</strong></td>
+                                            <td>{member.phone || member.phoneNumber || '-'}</td>
+                                            <td>{member.part || '-'}</td>
+                                            <td>{member.schoolName || member.school || '-'}</td>
+                                            <td>
+                                                <span className={`${styles.badge} ${styles[member.collection || 'participants_member']}`}>
+                                                    {member.collection === 'participants_admin' ? '운영진'
+                                                        : member.collection === 'participants_others' ? '외부'
+                                                        : '정회원'}
+                                                </span>
+                                            </td>
+                                            {selectedType !== 'allMembers' && (
+                                                <td>
+                                                    <button
+                                                        className={styles.removeBtn}
+                                                        onClick={() => handleRemoveMember(member)}
+                                                        disabled={updateMember.isPending}
+                                                    >
+                                                        제거
+                                                    </button>
+                                                </td>
+                                            )}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className={styles.empty}>
+                            이 타입에 속한 멤버가 없습니다.
+                        </div>
+                    )}
+
+                    <div className={styles.stats}>
+                        {selectedType !== 'allMembers' && (
+                            <p>이 타입에 속하지 않은 멤버: {membersNotInType.length}명</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* 멤버 추가 모달 */}
+            {showAddMemberModal && (
+                <div className={styles.modal}>
+                    <div className={styles.modalContent}>
+                        <h2>{selectedType}에 멤버 추가</h2>
+                        <p className={styles.modalSubtitle}>추가할 멤버를 선택하세요</p>
+
+                        <div className={styles.memberList}>
+                            {membersNotInType.length > 0 ? (
+                                membersNotInType.map(member => (
+                                    <label key={`${member.phoneKey}-${member.collection}`} className={styles.memberItem}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedMembersToAdd.includes(member.phoneKey)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedMembersToAdd([...selectedMembersToAdd, member.phoneKey]);
+                                                } else {
+                                                    setSelectedMembersToAdd(selectedMembersToAdd.filter(k => k !== member.phoneKey));
+                                                }
+                                            }}
+                                        />
+                                        <span className={styles.memberName}>{member.name}</span>
+                                        <span className={styles.memberSchool}>{member.schoolName || '-'}</span>
+                                    </label>
+                                ))
+                            ) : (
+                                <div className={styles.empty}>추가할 수 있는 멤버가 없습니다.</div>
+                            )}
+                        </div>
+
+                        <div className={styles.modalButtons}>
+                            <button
+                                className={styles.confirmBtn}
+                                onClick={handleAddMembers}
+                                disabled={updateMember.isPending || selectedMembersToAdd.length === 0}
+                            >
+                                {updateMember.isPending ? '추가 중...' : '추가'}
+                            </button>
+                            <button
+                                className={styles.cancelBtn}
+                                onClick={() => {
+                                    setShowAddMemberModal(false);
+                                    setSelectedMembersToAdd([]);
+                                }}
+                            >
+                                취소
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
-            {/* 검색 및 필터 */}
-            <div style={{ marginTop: '28px', marginBottom: '24px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <input
-                    type="text"
-                    placeholder="이름 또는 ID 검색"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
-                        flex: 1,
-                        minWidth: '220px',
-                        padding: '12px 16px',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '10px',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        backgroundColor: '#f9fafb',
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                        outline: 'none',
-                    }}
-                    onFocus={(e) => {
-                        e.target.style.borderColor = '#3282f6';
-                        e.target.style.backgroundColor = '#ffffff';
-                        e.target.style.boxShadow = '0 0 0 3px rgba(50, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.backgroundColor = '#f9fafb';
-                        e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
-                    }}
-                />
-                <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    style={{
-                        padding: '12px 14px',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '10px',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        backgroundColor: '#f9fafb',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                    }}
-                >
-                    <option value="all">전체</option>
-                    <option value="unchecked">미체크인</option>
-                    <option value="checked">체크인됨</option>
-                    <option value="checkedout">체크아웃됨</option>
-                </select>
-                <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    style={{
-                        padding: '12px 14px',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '10px',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        backgroundColor: '#f9fafb',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                    }}
-                >
-                    <option value="name">이름순</option>
-                    <option value="team">팀순</option>
-                </select>
-                <button
-                    onClick={refreshParticipants}
-                    disabled={isLoading}
-                    style={{
-                        padding: '12px 16px',
-                        backgroundColor: '#3282f6',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '10px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: isLoading ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                        opacity: isLoading ? 0.6 : 1,
-                    }}
-                    onMouseEnter={(e) => {
-                        if (!isLoading) {
-                            e.target.style.backgroundColor = '#2d6fd9';
-                            e.target.style.boxShadow = '0 4px 8px rgba(50, 130, 246, 0.3)';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (!isLoading) {
-                            e.target.style.backgroundColor = '#3282f6';
-                            e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
-                        }
-                    }}
-                >
-                    {isLoading ? '새로고침 중...' : '새로고침'}
-                </button>
-            </div>
+            {/* 새 타입 추가 모달 */}
+            {showAddTypeModal && (
+                <div className={styles.modal}>
+                    <div className={styles.modalContent} style={{ maxWidth: '400px' }}>
+                        <h2>새 타입 추가</h2>
+                        <p className={styles.modalSubtitle}>새로운 멤버 분류 타입을 만들어보세요</p>
 
-            {/* 테이블 */}
-            <div style={{ overflowX: 'auto', border: '1px solid #dee2e6', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                <table style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    backgroundColor: 'white',
-                    minWidth: '1600px',
-                }}>
-                    <thead>
-                        <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '100px' }}>이름</th>
-                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '50px' }}>팀</th>
-                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '60px' }}>파트</th>
-                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '120px' }}>전화번호</th>
-                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '70px' }}>체크인</th>
-                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '150px' }}>체크인 시간</th>
-                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '150px' }}>참가자 메모</th>
-                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '70px' }}>체크아웃</th>
-                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '150px' }}>체크아웃 시간</th>
-                            <th style={{ padding: '12px', textAlign: 'left', whiteSpace: 'nowrap', minWidth: '150px' }}>체크아웃 메모</th>
-                            <th style={{ padding: '12px', textAlign: 'center', whiteSpace: 'nowrap', minWidth: '80px' }}>작업</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredParticipants.map((p) => (
-                            <tr key={p.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '100px' }}>{p.name}</td>
-                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '50px' }}>{p.team_number || '-'}</td>
-                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '60px' }}>{p.part || '-'}</td>
-                                <td style={{ padding: '12px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '120px' }}>
-                                    {formatPhoneNumber(p.phone_number)}
-                                </td>
-                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '70px' }}>
-                                    <span style={{
-                                        padding: '4px 8px',
-                                        borderRadius: '4px',
-                                        backgroundColor: p.isCheckedIn ? '#d4edda' : '#f8d7da',
-                                        color: p.isCheckedIn ? '#155724' : '#721c24',
-                                        fontSize: '12px',
-                                        fontWeight: 'bold',
-                                    }}>
-                                        {p.isCheckedIn ? '체크인' : '미체크인'}
-                                    </span>
-                                </td>
-                                <td style={{ padding: '12px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '150px' }}>
-                                    {formatDate(p.checkedInAt)}
-                                </td>
-                                {/* 참가자 메모 */}
-                                <td style={{ padding: '12px', minWidth: '150px', maxWidth: '150px' }}>
-                                    {editingId === p.id && editingMemoType === 'participant' ? (
-                                        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                                            <input
-                                                type="text"
-                                                value={editingMemo}
-                                                onChange={(e) => setEditingMemo(e.target.value)}
-                                                style={{
-                                                    flex: 1,
-                                                    minWidth: '80px',
-                                                    padding: '6px',
-                                                    border: '1px solid #ddd',
-                                                    borderRadius: '4px',
-                                                }}
-                                                autoFocus
-                                            />
-                                            <button
-                                                onClick={() => handleSaveMemo(p.id)}
-                                                style={{
-                                                    padding: '6px 8px',
-                                                    backgroundColor: '#28a745',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '11px',
-                                                    whiteSpace: 'nowrap',
-                                                }}
-                                            >
-                                                저장
-                                            </button>
-                                            <button
-                                                onClick={() => setEditingId(null)}
-                                                style={{
-                                                    padding: '6px 8px',
-                                                    backgroundColor: '#6c757d',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '11px',
-                                                    whiteSpace: 'nowrap',
-                                                }}
-                                            >
-                                                취소
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => startEditMemo(p.id, p.memo, 'participant')}
-                                            style={{
-                                                padding: '6px 8px',
-                                                backgroundColor: p.memo ? '#e3f2fd' : '#e9ecef',
-                                                border: '1px solid #dee2e6',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                width: '100%',
-                                                textAlign: 'left',
-                                                fontWeight: p.memo ? '600' : '400',
-                                                fontSize: '12px',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                            }}
-                                            title="클릭하여 메모 수정"
-                                        >
-                                            {p.memo || '클릭해서 추가'}
-                                        </button>
-                                    )}
-                                </td>
-                                <td style={{ padding: '12px', whiteSpace: 'nowrap', minWidth: '70px' }}>
-                                    <span style={{
-                                        padding: '4px 8px',
-                                        borderRadius: '4px',
-                                        backgroundColor: p.checkedOutAt ? '#d4edda' : '#f8d7da',
-                                        color: p.checkedOutAt ? '#155724' : '#721c24',
-                                        fontSize: '12px',
-                                        fontWeight: 'bold',
-                                    }}>
-                                        {p.checkedOutAt ? '체크아웃' : '대기'}
-                                    </span>
-                                </td>
-                                <td style={{ padding: '12px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '150px' }}>
-                                    {formatDate(p.checkedOutAt)}
-                                </td>
-                                {/* 체크아웃 메모 */}
-                                <td style={{ padding: '12px', minWidth: '150px', maxWidth: '150px' }}>
-                                    {editingId === p.id && editingMemoType === 'checkout' ? (
-                                        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                                            <input
-                                                type="text"
-                                                value={editingMemo}
-                                                onChange={(e) => setEditingMemo(e.target.value)}
-                                                style={{
-                                                    flex: 1,
-                                                    minWidth: '80px',
-                                                    padding: '6px',
-                                                    border: '1px solid #ddd',
-                                                    borderRadius: '4px',
-                                                }}
-                                                autoFocus
-                                            />
-                                            <button
-                                                onClick={() => handleSaveMemo(p.id)}
-                                                style={{
-                                                    padding: '6px 8px',
-                                                    backgroundColor: '#28a745',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '11px',
-                                                    whiteSpace: 'nowrap',
-                                                }}
-                                            >
-                                                저장
-                                            </button>
-                                            <button
-                                                onClick={() => setEditingId(null)}
-                                                style={{
-                                                    padding: '6px 8px',
-                                                    backgroundColor: '#6c757d',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '11px',
-                                                    whiteSpace: 'nowrap',
-                                                }}
-                                            >
-                                                취소
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => startEditMemo(p.id, p.checkedOutMemo, 'checkout')}
-                                            style={{
-                                                padding: '6px 8px',
-                                                backgroundColor: p.checkedOutMemo ? '#e3f2fd' : '#e9ecef',
-                                                border: '1px solid #dee2e6',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                width: '100%',
-                                                textAlign: 'left',
-                                                fontWeight: p.checkedOutMemo ? '600' : '400',
-                                                fontSize: '12px',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                            }}
-                                            title="클릭하여 메모 수정"
-                                        >
-                                            {p.checkedOutMemo || '클릭해서 추가'}
-                                        </button>
-                                    )}
-                                </td>
-                                <td style={{ padding: '12px', textAlign: 'center', minWidth: '80px', whiteSpace: 'nowrap' }}>
-                                    <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                        <button
-                                            onClick={() => handleToggleCheckin(p.id, p.isCheckedIn)}
-                                            style={{
-                                                padding: '4px 8px',
-                                                backgroundColor: p.isCheckedIn ? '#dc3545' : '#28a745',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                fontSize: '11px',
-                                            }}
-                                            title={p.isCheckedIn ? '체크인 취소' : '체크인'}
-                                        >
-                                            {p.isCheckedIn ? '체크인✓' : '체크인✗'}
-                                        </button>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                                타입명:
+                            </label>
+                            <input
+                                type="text"
+                                value={newTypeName}
+                                onChange={(e) => setNewTypeName(e.target.value)}
+                                placeholder="예: newbie, mentor, sponsor"
+                                style={{
+                                    width: '100%',
+                                    padding: '10px',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '6px',
+                                    fontSize: '14px',
+                                    boxSizing: 'border-box'
+                                }}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter') handleAddType();
+                                }}
+                            />
+                        </div>
 
-                                        {p.isCheckedIn && (
-                                            <button
-                                                onClick={() => handleToggleCheckout(p.id, p.checkedOutAt)}
-                                                style={{
-                                                    padding: '4px 8px',
-                                                    backgroundColor: p.checkedOutAt ? '#dc3545' : '#28a745',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '11px',
-                                                }}
-                                                title={p.checkedOutAt ? '체크아웃 취소' : '체크아웃'}
-                                            >
-                                                {p.checkedOutAt ? '아웃✓' : '아웃✗'}
-                                            </button>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {filteredParticipants.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                    해당하는 참가자가 없습니다.
+                        <div className={styles.modalButtons}>
+                            <button
+                                className={styles.confirmBtn}
+                                onClick={handleAddType}
+                            >
+                                추가
+                            </button>
+                            <button
+                                className={styles.cancelBtn}
+                                onClick={() => {
+                                    setShowAddTypeModal(false);
+                                    setNewTypeName('');
+                                }}
+                            >
+                                취소
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
