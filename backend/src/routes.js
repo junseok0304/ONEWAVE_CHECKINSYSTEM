@@ -5,6 +5,9 @@ import { verifyPassword } from './authMiddleware.js';
 
 const router = express.Router();
 
+// 기본 타입 목록 (맨 위에 정의)
+const DEFAULT_TYPES = ['allMembers', 'gdgSKHU', 'gdgsswu', 'gdgSWU', 'TripleS', 'legend', '2026스쿠톤'];
+
 // 체크인 전용 Rate Limiter
 const checkinLimiter = rateLimit({
     windowMs: 5 * 60 * 1000, // 5분
@@ -107,9 +110,6 @@ const getPhoneLast4 = (phone) => {
 
 // 3개 컬렉션 목록
 const MEMBER_COLLECTIONS = ['participants_admin', 'participants_member', 'participants_others'];
-
-// 기본 타입 목록
-const DEFAULT_TYPES = ['allMembers', 'gdgSKHU', 'gdgsswu', 'gdgSWU', 'TripleS', 'legend', '2026스쿠톤'];
 
 // 특정 phoneKey로 멤버 검색 (3개 컬렉션에서)
 const findMemberByPhoneKey = async (phoneKey) => {
