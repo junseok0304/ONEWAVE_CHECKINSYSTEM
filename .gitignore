@@ -35,3 +35,10 @@ yarn-error.log*
 
 # Local development
 .claude/
+
+# Local-only deployment files
+deploy*.sh
+docker-compose.yml
+nginx.conf
+DEPLOYMENT*.md
+QUICK_START_DEPLOY.md
