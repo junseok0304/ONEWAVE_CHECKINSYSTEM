@@ -1,23 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api';
 
-const MASTER_PASSWORD = process.env.NEXT_PUBLIC_MASTER_PASSWORD || '';
-
 export function useMembers() {
     return useQuery({
         queryKey: ['members'],
         queryFn: async () => {
             // 세 개 컬렉션을 병렬로 조회
             const [memberRes, adminRes, othersRes] = await Promise.all([
-                apiRequest('/members', 'GET', undefined, MASTER_PASSWORD).catch((err) => {
+                apiRequest('/members', 'GET').catch((err) => {
                     console.error('[DEBUG] /members 에러:', err);
                     return { members: [] };
                 }),
-                apiRequest('/admin-members', 'GET', undefined, MASTER_PASSWORD).catch((err) => {
+                apiRequest('/admin-members', 'GET').catch((err) => {
                     console.error('[DEBUG] /admin-members 에러:', err);
                     return { members: [] };
                 }),
-                apiRequest('/others-members', 'GET', undefined, MASTER_PASSWORD).catch((err) => {
+                apiRequest('/others-members', 'GET').catch((err) => {
                     console.error('[DEBUG] /others-members 에러:', err);
                     return { members: [] };
                 })
@@ -46,7 +44,7 @@ export function useMembers() {
 export function useMemberDetail(phoneKey) {
     return useQuery({
         queryKey: ['member-detail', phoneKey],
-        queryFn: () => apiRequest(`/members/${phoneKey}`, 'GET', undefined, MASTER_PASSWORD),
+        queryFn: () => apiRequest(`/members/${phoneKey}`, 'GET'),
         enabled: !!phoneKey,
         staleTime: 30 * 1000,
     });
@@ -59,7 +57,7 @@ export function useCreateMember() {
         mutationFn: ({ memberData, collection = 'participants_member' }) => {
             // collection 파라미터에 따라 다른 엔드포인트 사용
             // 기본은 participants_member로 저장
-            return apiRequest('/members', 'POST', { ...memberData, _collection: collection }, MASTER_PASSWORD);
+            return apiRequest('/members', 'POST', { ...memberData, _collection: collection });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['members'] });
@@ -79,7 +77,7 @@ export function useUpdateMember() {
                 ? `/others-members/${phoneKey}`
                 : `/members/${phoneKey}`;
 
-            return apiRequest(endpoint, 'PATCH', data, MASTER_PASSWORD);
+            return apiRequest(endpoint, 'PATCH', data);
         },
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['members'] });
@@ -94,11 +92,11 @@ export function useUpdateMemberMemo() {
     return useMutation({
         mutationFn: async ({ phoneKey, memo, date }) => {
             // 멤버 메모 저장
-            await apiRequest(`/members/${phoneKey}/memo`, 'PATCH', { memo }, MASTER_PASSWORD);
+            await apiRequest(`/members/${phoneKey}/memo`, 'PATCH', { memo });
 
             // 체크인 메모도 저장 (date가 제공되면)
             if (date) {
-                await apiRequest(`/checkin/${date}/${phoneKey}/memo`, 'PATCH', { memo }, MASTER_PASSWORD);
+                await apiRequest(`/checkin/${date}/${phoneKey}/memo`, 'PATCH', { memo });
             }
         },
         onSuccess: (_, variables) => {
@@ -120,7 +118,7 @@ export function useDeleteMember() {
                 ? `/others-members/${phoneKey}`
                 : `/members/${phoneKey}`;
 
-            return apiRequest(endpoint, 'DELETE', undefined, MASTER_PASSWORD);
+            return apiRequest(endpoint, 'DELETE');
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['members'] });

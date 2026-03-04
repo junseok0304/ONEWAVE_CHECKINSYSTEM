@@ -1,32 +1,45 @@
+import crypto from 'crypto';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
-export const verifyPassword = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ message: 'No password provided' });
+const normalizeSecret = (value) => value?.trim().replace(/^["']|["']$/g, '') || '';
 
-    // Bearer 토큰 추출 및 이스케이프 문자 제거
-    let token = authHeader.replace('Bearer ', '');
-    // 백슬래시 제거 (Shell 이스케이핑)
-    token = token.replace(/\\/g, '');
+const extractBearerToken = (authHeader = '') => authHeader.replace(/^Bearer\s+/i, '').replace(/\\/g, '');
 
-    const master = process.env.MASTER_PASSWORD?.trim().replace(/^["']|["']$/g, '');
-    const kiosk = process.env.KIOSK_PASSWORD?.trim().replace(/^["']|["']$/g, '');
+const safeEqual = (left, right) => {
+    const leftBuffer = Buffer.from(left);
+    const rightBuffer = Buffer.from(right);
 
-    console.log('[AUTH DEBUG]', {
-        token,
-        master,
-        kiosk,
-        masterMatch: token === master,
-        kioskMatch: token === kiosk
-    });
-
-    const validPasswords = [master, kiosk];
-
-    if (!validPasswords.includes(token)) {
-        return res.status(401).json({ message: 'Invalid password' });
+    if (leftBuffer.length !== rightBuffer.length) {
+        return false;
     }
 
-    req.isMaster = token === master;
+    return crypto.timingSafeEqual(leftBuffer, rightBuffer);
+};
+
+const verifySecret = (expectedSecret, missingMessage, invalidMessage) => (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ message: missingMessage });
+    }
+
+    const token = extractBearerToken(authHeader);
+    if (!expectedSecret || !safeEqual(token, expectedSecret)) {
+        return res.status(401).json({ message: invalidMessage });
+    }
+
     next();
 };
+
+export const verifyMasterPassword = verifySecret(
+    normalizeSecret(process.env.MASTER_PASSWORD),
+    'No admin password provided',
+    'Invalid admin password'
+);
+
+export const verifyKioskPassword = verifySecret(
+    normalizeSecret(process.env.KIOSK_PASSWORD),
+    'No kiosk password provided',
+    'Invalid kiosk password'
+);

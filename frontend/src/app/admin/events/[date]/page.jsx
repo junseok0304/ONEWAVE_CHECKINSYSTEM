@@ -56,19 +56,18 @@ export default function EventDetailPage() {
     const handleSaveMemo = async (phoneKey) => {
         try {
             const { apiRequest: request } = await import('@/lib/api');
-            const password = process.env.NEXT_PUBLIC_MASTER_PASSWORD || '';
 
             if (editingMemoType === 'checkin') {
                 // 특이사항메모
                 const apiPath = `/checkin/${date}/${phoneKey}/memo`;
                 const payload = { memo: memoText, type: 'checkin' };
-                await request(apiPath, 'PATCH', payload, password);
+                await request(apiPath, 'PATCH', payload);
                 alert('특이사항메모가 저장되었습니다.');
             } else if (editingMemoType === 'user') {
                 // 유저메모
                 const apiPath = `/members/${phoneKey}/memo`;
                 const payload = { memo: memoText };
-                await request(apiPath, 'PATCH', payload, password);
+                await request(apiPath, 'PATCH', payload);
                 alert('유저메모가 저장되었습니다.');
             }
 

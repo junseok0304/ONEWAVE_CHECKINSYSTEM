@@ -285,3 +285,137 @@
         transform: scale(1.1);
     }
 }
+
+@media (max-width: 600px) {
+  .container {
+    padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+    align-items: stretch;
+    overflow-y: auto;
+  }
+
+  .content {
+    width: 100%;
+    min-height: auto;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .left {
+    border-right: none;
+    border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+    border-radius: 24px 24px 18px 18px;
+    padding: 12px 16px 0;
+    justify-content: flex-start;
+    align-self: auto;
+  }
+
+  .leftText {
+    font-size: clamp(28px, 7.4vw, 38px);
+    line-height: 1.03;
+    gap: 2px;
+  }
+
+  .leftDesc {
+    font-size: 14px;
+    line-height: 1.45;
+    margin-top: 8px;
+  }
+
+  .right {
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .card {
+    width: 100%;
+    border-radius: 24px;
+    padding: 18px 16px 16px;
+    gap: 12px;
+  }
+
+  .icon {
+    margin-bottom: 2px;
+  }
+
+  .icon img {
+    width: min(54vw, 220px) !important;
+    max-width: 220px;
+  }
+
+  .title {
+    font-size: 30px;
+    margin-bottom: 2px;
+    text-align: center;
+  }
+
+  .desc {
+    font-size: 17px;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+
+  .timer {
+    font-size: 15px;
+    line-height: 1.45;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .progressTrack {
+    margin-bottom: 8px;
+  }
+
+  .button {
+    min-height: 58px;
+    height: 58px;
+    font-size: 17px;
+    border-radius: 16px;
+  }
+
+  .touchModalContent {
+    padding: 0 20px;
+    gap: 14px;
+  }
+
+  .touchModalText {
+    font-size: clamp(26px, 8vw, 34px);
+  }
+
+  .touchIcon {
+    font-size: clamp(42px, 12vw, 58px);
+  }
+}
+
+@media (max-width: 430px) {
+  .left {
+    padding: 10px 14px 0;
+  }
+
+  .leftText {
+    font-size: 26px;
+  }
+
+  .card {
+    padding: 16px 14px 14px;
+    gap: 10px;
+  }
+
+  .icon img {
+    width: min(58vw, 190px) !important;
+  }
+
+  .title {
+    font-size: 27px;
+  }
+
+  .desc {
+    font-size: 16px;
+  }
+
+  .button {
+    min-height: 56px;
+    height: 56px;
+    font-size: 16px;
+  }
+}

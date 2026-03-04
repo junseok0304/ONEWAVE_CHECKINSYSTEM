@@ -139,11 +139,12 @@ npm install
 `.env.local` 파일 수정:
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api
-NEXT_PUBLIC_MASTER_PASSWORD=your-secure-master-password
-NEXT_PUBLIC_KIOSK_PASSWORD=your-kiosk-password
+ADMIN_UI_PASSWORD=REDACTED_SECRET
+MASTER_PASSWORD=your-secure-master-password
+BACKEND_INTERNAL_URL=http://localhost:8080/api
 ```
 
-**주의**: `NEXT_PUBLIC_`로 시작하는 변수는 클라이언트에 노출됩니다. 개발 환경에서만 간단한 비밀번호를 사용하세요.
+`ADMIN_UI_PASSWORD`는 관리자 페이지 진입용 비밀번호이고, `MASTER_PASSWORD`는 프론트엔드 서버가 백엔드 관리자 API와 통신할 때만 사용하는 서버 전용 비밀번호입니다.
 
 #### 3-3. 프론트엔드 실행
 

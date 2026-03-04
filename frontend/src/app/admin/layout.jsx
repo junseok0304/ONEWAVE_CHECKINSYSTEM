@@ -4,8 +4,6 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import styles from './adminLayout.module.css';
 
-const ADMIN_PASSWORD = 'REDACTED_SECRET';
-
 export default function AdminLayout({ children }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
@@ -13,35 +11,56 @@ export default function AdminLayout({ children }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // 개발 환경에서 테스트하기 쉽도록 새로고침 후 인증 상태 초기화
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('logout') === 'true') {
-            localStorage.removeItem('adminAuth');
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
+        const checkSession = async () => {
+            try {
+                const res = await fetch('/api/admin/session', {
+                    credentials: 'same-origin',
+                });
+                const data = await res.json();
+                setIsAuthenticated(Boolean(data.authenticated));
+            } catch (err) {
+                setIsAuthenticated(false);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-        const authToken = localStorage.getItem('adminAuth');
-        if (authToken === 'true') {
-            setIsAuthenticated(true);
-        }
-        setIsLoading(false);
+        checkSession();
     }, []);
 
-    const handlePasswordSubmit = (e) => {
+    const handlePasswordSubmit = async (e) => {
         e.preventDefault();
-        if (password === ADMIN_PASSWORD) {
-            localStorage.setItem('adminAuth', 'true');
+
+        try {
+            const res = await fetch('/api/admin/session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ password }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setError(data.message || '비밀번호가 올바르지 않습니다.');
+                setPassword('');
+                return;
+            }
+
             setIsAuthenticated(true);
             setPassword('');
             setError('');
-        } else {
-            setError('비밀번호가 올바르지 않습니다.');
-            setPassword('');
+        } catch (err) {
+            setError('인증 요청에 실패했습니다.');
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('adminAuth');
+    const handleLogout = async () => {
+        await fetch('/api/admin/session', {
+            method: 'DELETE',
+            credentials: 'same-origin',
+        }).catch(() => {});
         setIsAuthenticated(false);
     };
 

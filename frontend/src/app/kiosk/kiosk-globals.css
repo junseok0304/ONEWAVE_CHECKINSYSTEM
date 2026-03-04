@@ -22,3 +22,19 @@ html {
 body {
     overflow: hidden;
 }
+
+@media (max-width: 600px) {
+    .kioskRoot {
+        min-height: 100dvh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    html,
+    body {
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}

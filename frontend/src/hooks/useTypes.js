@@ -1,13 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api';
 
-const MASTER_PASSWORD = process.env.NEXT_PUBLIC_MASTER_PASSWORD || '';
-
 export function useTypes() {
     return useQuery({
         queryKey: ['types'],
         queryFn: async () => {
-            const response = await apiRequest('/types', 'GET', undefined, MASTER_PASSWORD);
+            const response = await apiRequest('/types', 'GET');
             return response.types || [];
         },
         staleTime: 60 * 1000, // 1분
@@ -20,7 +18,7 @@ export function useAddType() {
 
     return useMutation({
         mutationFn: ({ typeName }) => {
-            return apiRequest('/types', 'POST', { typeName }, MASTER_PASSWORD);
+            return apiRequest('/types', 'POST', { typeName });
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['types'] });

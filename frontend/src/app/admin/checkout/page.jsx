@@ -22,9 +22,7 @@ export default function CheckoutPage() {
     try {
       const data = await apiRequest(
         '/participants',
-        'GET',
-        undefined,
-        process.env.NEXT_PUBLIC_MASTER_PASSWORD || ''
+        'GET'
       );
       setParticipants(data.filter(p => p.isCheckedIn));
     } catch (err) {
@@ -44,8 +42,7 @@ export default function CheckoutPage() {
       await apiRequest(
         `/participants/${participantId}`,
         'PUT',
-        { checkedOutMemo: memo },
-        process.env.NEXT_PUBLIC_MASTER_PASSWORD || ''
+        { checkedOutMemo: memo }
       );
       setCheckoutMemo((prev) => {
         const newMemo = { ...prev };
@@ -63,8 +60,7 @@ export default function CheckoutPage() {
       await apiRequest(
         `/participants/${participantId}`,
         'PUT',
-        { checkedOutMemo: editingMemoValue },
-        process.env.NEXT_PUBLIC_MASTER_PASSWORD || ''
+        { checkedOutMemo: editingMemoValue }
       );
       setEditingMemoId(null);
       fetchParticipants();

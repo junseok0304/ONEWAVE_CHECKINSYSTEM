@@ -222,3 +222,110 @@
     box-shadow: none !important;
     opacity: 0.95 !important;
 }
+
+@media (max-width: 600px) {
+    .container {
+        padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+        align-items: stretch;
+        overflow-y: auto;
+    }
+
+    .content {
+        width: 100%;
+        min-height: auto;
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .left {
+        border-right: none;
+        border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+        border-radius: 24px 24px 18px 18px;
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top: 14px;
+        padding-bottom: 2px;
+        align-self: auto;
+    }
+
+    .leftText {
+        font-size: clamp(28px, 7.2vw, 38px);
+        line-height: 1.04;
+        gap: 2px;
+    }
+
+    .leftDesc {
+        font-size: 14px;
+        line-height: 1.45;
+    }
+
+    .right {
+        padding-right: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .card {
+        width: 100%;
+        min-height: auto;
+        border-radius: 24px;
+        padding: 18px 16px 16px;
+        gap: 14px;
+    }
+
+    .cardTitle {
+        font-size: 22px;
+    }
+
+    .cardBody {
+        max-height: min(34vh, 250px);
+        font-size: 14px;
+        line-height: 1.55;
+        padding-right: 2px;
+    }
+
+    .checkbox {
+        font-size: 15px;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .checkbox input {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .actions {
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+
+    .button {
+        width: 100%;
+        min-height: 62px;
+        height: 62px;
+        font-size: 18px;
+        border-radius: 16px;
+    }
+}
+
+@media (max-width: 430px) {
+    .left {
+        padding-left: 14px;
+        padding-right: 14px;
+        padding-top: 12px;
+        padding-bottom: 0;
+    }
+
+    .card {
+        padding: 16px 14px 14px;
+    }
+
+    .button {
+        min-height: 60px;
+        height: 60px;
+        font-size: 17px;
+    }
+}

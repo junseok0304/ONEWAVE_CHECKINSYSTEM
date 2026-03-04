@@ -8,8 +8,6 @@ import { useUpdateEvent } from '@/hooks/useEvents';
 import { useUpdateMemberMemo } from '@/hooks/useMembers';
 import styles from './dashboard.module.css';
 
-const MASTER_PASSWORD = process.env.NEXT_PUBLIC_MASTER_PASSWORD || '';
-
 /**
  * 날짜 포맷팅 유틸리티
  */
@@ -53,7 +51,7 @@ export default function AdminDashboard() {
         try {
             setLoading(true);
             const today = new Date().toISOString().split('T')[0];
-            const res = await apiRequest(`/realtime/checkin?date=${today}`, 'GET', undefined, MASTER_PASSWORD);
+            const res = await apiRequest(`/realtime/checkin?date=${today}`, 'GET');
 
             if (res.data) {
                 setEvent(res.data.event);
@@ -137,14 +135,13 @@ export default function AdminDashboard() {
     const handleSaveMemo = async (phoneKey) => {
         try {
             const { apiRequest: request } = await import('@/lib/api');
-            const password = process.env.NEXT_PUBLIC_MASTER_PASSWORD || '';
             const today = new Date().toISOString().split('T')[0];
 
             if (editingMemoType === 'checkin') {
                 // 특이사항메모
                 const apiPath = `/checkin/${today}/${phoneKey}/memo`;
                 const payload = { memo: memoText, type: 'checkin' };
-                await request(apiPath, 'PATCH', payload, password);
+                await request(apiPath, 'PATCH', payload);
 
                 // 화면의 메모도 업데이트
                 setCheckedInList(prev => prev.map(p =>
@@ -159,7 +156,7 @@ export default function AdminDashboard() {
                 // 유저메모
                 const apiPath = `/members/${phoneKey}/memo`;
                 const payload = { memo: memoText };
-                await request(apiPath, 'PATCH', payload, password);
+                await request(apiPath, 'PATCH', payload);
 
                 // 화면의 메모도 업데이트
                 setCheckedInList(prev => prev.map(p =>

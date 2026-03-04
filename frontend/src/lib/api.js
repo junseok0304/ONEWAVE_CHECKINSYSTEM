@@ -1,9 +1,8 @@
-export async function apiRequest(path, method = 'GET', body, password) {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}${path}`, {
+export async function apiRequest(path, method = 'GET', body) {
+    const res = await fetch(`/internal-api${path}`, {
         method,
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${password}`,
         },
         body: body ? JSON.stringify(body) : undefined,
     });

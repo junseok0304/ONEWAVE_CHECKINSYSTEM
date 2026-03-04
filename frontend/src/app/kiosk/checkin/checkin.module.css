@@ -762,20 +762,223 @@
 
 @media (max-width: 600px) {
     .container {
-        padding: clamp(16px, 4vh, 24px);
+        padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+        align-items: stretch;
+        overflow-y: auto;
     }
 
     .content {
-        gap: clamp(28px, 4vh, 36px);
+        width: 100%;
+        min-height: auto;
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .left {
+        border-right: none;
+        border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+        border-radius: 24px 24px 18px 18px;
+        padding-left: 18px;
+        padding-right: 18px;
+        padding-top: 14px;
+        padding-bottom: 2px;
+        justify-content: flex-start;
+        align-self: auto;
     }
 
     .leftText {
-        font-size: clamp(36px, 5vh, 52px);
-        line-height: 1.1;
-        margin-bottom: clamp(16px, 2vh, 24px);
+        font-size: clamp(28px, 7.2vw, 38px);
+        line-height: 1.02;
+        gap: 2px;
+        margin-bottom: 8px;
+    }
+
+    .leftDesc {
+        font-size: 14px;
+        line-height: 1.45;
+    }
+
+    .right {
+        padding-right: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .card {
+        min-height: auto;
+        border-radius: 24px;
+        padding: 16px 14px 14px;
+        gap: 10px;
+        box-shadow: 0 14px 30px rgba(10, 10, 10, 0.1);
+    }
+
+    .cardSelectTall,
+    .cardSelectCompact {
+        min-height: auto;
+    }
+
+    .phoneContainer {
+        gap: 8px;
+    }
+
+    .phoneInput {
+        height: 64px;
+        font-size: 24px;
+        letter-spacing: 8px;
+        border-radius: 18px;
+        background: #ffffff;
+    }
+
+    .numpadGrid {
+        gap: 8px;
+        padding: 8px;
+        margin-top: 0;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0%, rgba(255, 255, 255, 0.92) 100%);
+    }
+
+    .numpadBtn,
+    .numpadBtnReset,
+    .numpadBtnBackspace {
+        height: min(12vw, 56px);
+        min-height: 50px;
+        border-radius: 16px;
+        font-size: 18px;
+    }
+
+    .numpadBtnReset {
+        font-size: 11px;
+    }
+
+    .errorBox {
+        font-size: 13px;
+        padding: 12px 14px;
+    }
+
+    .cardTitle {
+        font-size: 24px;
+        line-height: 1.15;
+        margin-bottom: 4px;
+    }
+
+    .subTitle {
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+
+    .candidateScrollArea {
+        padding-right: 2px;
+        margin-top: 0;
+    }
+
+    .candidateScrollCompact,
+    .candidateScrollTall {
+        max-height: min(42vh, 340px);
+        min-height: 0;
+    }
+
+    .candidateList {
+        gap: 10px;
+    }
+
+    .candidateBtn {
+        padding: 14px 12px;
+        border-radius: 14px;
     }
 
     .candidateName {
-        font-size: clamp(17px, 2.1vh, 26px);
+        font-size: 20px;
+        margin-left: 0;
+        text-align: left;
+    }
+
+    .candidateRow {
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .badgeContainer {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        margin-left: 0;
+    }
+
+    .staffBadge,
+    .badge {
+        font-size: 10px;
+        padding: 5px 8px;
+    }
+
+    .goBackBtn {
+        width: 100%;
+        margin-top: 6px;
+        height: 50px;
+        font-size: 14px;
+    }
+
+    .confirmName {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+
+    .confirmDesc {
+        font-size: 17px;
+        margin-bottom: 14px;
+    }
+
+    .confirmActions {
+        gap: 10px;
+    }
+
+    .confirmBtn {
+        min-height: 58px;
+        font-size: 18px;
+        border-radius: 16px;
+    }
+}
+
+@media (max-width: 430px) {
+    .left {
+        padding-left: 14px;
+        padding-right: 14px;
+        padding-top: 12px;
+        padding-bottom: 0;
+    }
+
+    .leftText {
+        font-size: 26px;
+    }
+
+    .card {
+        padding: 16px 14px 14px;
+    }
+
+    .phoneInput {
+        height: 60px;
+        font-size: 22px;
+        letter-spacing: 6px;
+    }
+
+    .numpadGrid {
+        gap: 7px;
+        padding: 7px;
+    }
+
+    .numpadBtn,
+    .numpadBtnReset,
+    .numpadBtnBackspace {
+        min-height: 46px;
+        height: 46px;
+        font-size: 17px;
+    }
+
+    .candidateName {
+        font-size: 18px;
+    }
+
+    .confirmActions {
+        grid-template-columns: 1fr;
     }
 }

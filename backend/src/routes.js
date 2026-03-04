@@ -1,7 +1,7 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import db from './firestore.js';
-import { verifyPassword } from './authMiddleware.js';
+import { verifyMasterPassword } from './authMiddleware.js';
 
 const router = express.Router();
 
@@ -54,7 +54,7 @@ router.get('/types', async (req, res) => {
 });
 
 // 새 타입 추가 (인증 필요)
-router.post('/types', verifyPassword, async (req, res) => {
+router.post('/types', verifyMasterPassword, async (req, res) => {
     try {
         const { typeName } = req.body;
 
@@ -142,30 +142,6 @@ const getAllMembers = async () => {
     return members;
 };
 
-// 참가자 조회 (관리자용)
-router.get('/participants', verifyPassword, async (req, res) => {
-    const snapshot = await db.collection('participants_checkin').get();
-    const data = snapshot.docs.map(doc => {
-        const docData = doc.data();
-
-        return {
-            id: doc.id,
-            email: docData.email,
-            name: docData.name,
-            team_number: docData.teamNumber || 0,
-            part: docData.position || '',
-            phone_number: docData.phone,
-            status: docData.status || 'REJECTED',
-            isCheckedIn: docData.checked_in_status || false,
-            checkedInAt: formatTimestamp(docData.checkedInAt),
-            memo: docData.memo || '',
-            checkedOutAt: formatTimestamp(docData.checkedOutAt),
-            checkedOutMemo: docData.checkedOutMemo || '',
-        };
-    });
-    res.json(data);
-});
-
 // 휴대폰 끝 4자리로 참가자 검색 (키오스크용)
 router.get('/search', searchLimiter, async (req, res) => {
     const { phoneLast4 } = req.query;
@@ -248,7 +224,7 @@ const getTodayString = () => {
 };
 
 // 이벤트 설정 (관리자용)
-router.post('/event/setup', verifyPassword, async (req, res) => {
+router.post('/event/setup', verifyMasterPassword, async (req, res) => {
     const { date, eventName, eventType } = req.body;
 
     if (!date || !eventName || !eventType) {
@@ -330,110 +306,6 @@ router.get('/event/today', async (req, res) => {
     }
 });
 
-// 사용자 타입 조회
-router.get('/users/:phoneNumber/types', async (req, res) => {
-    const { phoneNumber } = req.params;
-
-    try {
-        const phoneKey = phoneNumber.replace(/-/g, '').slice(-11);
-        const doc = await db.collection('member_database').doc(phoneKey).get();
-
-        if (!doc.exists) {
-            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
-        }
-
-        const data = doc.data();
-        const types = Array.isArray(data.types) ? data.types : (data.types ? [data.types] : ['allMembers']);
-
-        res.json({
-            phoneNumber: data.phoneNumber,
-            name: data.name,
-            types,
-        });
-    } catch (error) {
-        console.error('Get types error:', error);
-        res.status(500).json({ message: '타입 조회 중 오류가 발생했습니다.' });
-    }
-});
-
-// 사용자 타입 추가 (관리자용)
-router.post('/users/:phoneNumber/types/add', verifyPassword, async (req, res) => {
-    const { phoneNumber } = req.params;
-    const { type } = req.body;
-
-    if (!type) {
-        return res.status(400).json({ message: '타입이 필요합니다.' });
-    }
-
-    try {
-        const phoneKey = phoneNumber.replace(/-/g, '').slice(-11);
-        const doc = await db.collection('member_database').doc(phoneKey).get();
-
-        if (!doc.exists) {
-            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
-        }
-
-        const data = doc.data();
-        let types = Array.isArray(data.types) ? data.types : (data.types ? [data.types] : ['allMembers']);
-
-        if (types.includes(type)) {
-            return res.status(400).json({ message: '이미 가지고 있는 타입입니다.' });
-        }
-
-        types.push(type);
-
-        await db.collection('member_database').doc(phoneKey).update({ types });
-
-        res.json({ success: true, types });
-    } catch (error) {
-        console.error('Add type error:', error);
-        res.status(500).json({ message: '타입 추가 중 오류가 발생했습니다.' });
-    }
-});
-
-// 사용자 타입 제거 (관리자용)
-router.post('/users/:phoneNumber/types/remove', verifyPassword, async (req, res) => {
-    const { phoneNumber } = req.params;
-    const { type } = req.body;
-
-    if (!type) {
-        return res.status(400).json({ message: '타입이 필요합니다.' });
-    }
-
-    if (type === 'allMembers') {
-        return res.status(400).json({ message: 'allMembers 타입은 제거할 수 없습니다.' });
-    }
-
-    try {
-        const phoneKey = phoneNumber.replace(/-/g, '').slice(-11);
-        const doc = await db.collection('member_database').doc(phoneKey).get();
-
-        if (!doc.exists) {
-            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
-        }
-
-        const data = doc.data();
-        let types = Array.isArray(data.types) ? data.types : (data.types ? [data.types] : ['allMembers']);
-
-        if (!types.includes(type)) {
-            return res.status(400).json({ message: '해당 타입을 가지고 있지 않습니다.' });
-        }
-
-        types = types.filter(t => t !== type);
-
-        // 타입이 없으면 allMembers만 남기기
-        if (types.length === 0) {
-            types = ['allMembers'];
-        }
-
-        await db.collection('member_database').doc(phoneKey).update({ types });
-
-        res.json({ success: true, types });
-    } catch (error) {
-        console.error('Remove type error:', error);
-        res.status(500).json({ message: '타입 제거 중 오류가 발생했습니다.' });
-    }
-});
 
 // 체크인 처리
 router.post('/checkin', checkinLimiter, async (req, res) => {
@@ -493,104 +365,12 @@ router.post('/checkin', checkinLimiter, async (req, res) => {
     }
 });
 
-// 체크인 이력 조회 (특정 날짜)
-router.get('/checkin-history/:date', async (req, res) => {
-    const { date } = req.params;
-
-    try {
-        const eventDoc = await db.collection('events').doc(date).get();
-        if (!eventDoc.exists) {
-            return res.status(404).json({ message: '해당 날짜의 이벤트가 없습니다.' });
-        }
-
-        const eventData = eventDoc.data();
-        const checkInSnapshot = await db.collection(`checkIn_${date}`).get();
-        const checkedInUsers = checkInSnapshot.docs.map(doc => doc.data());
-        const checkedInIds = checkedInUsers.map(u => u.phoneNumber.replace(/-/g, '').slice(-11));
-
-        // 미체크인 사용자 조회
-        const notCheckedInUsers = [];
-        for (const phoneKey of eventData.participants) {
-            if (!checkedInIds.includes(phoneKey)) {
-                const userDoc = await db.collection('member_database').doc(phoneKey).get();
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    notCheckedInUsers.push({
-                        phoneNumber: userData.phoneNumber,
-                        name: userData.name,
-                        gen: userData.gen,
-                        part: userData.part,
-                    });
-                }
-            }
-        }
-
-        res.json({
-            event: eventData,
-            checkedIn: checkedInUsers,
-            notCheckedIn: notCheckedInUsers,
-            checkedInCount: checkedInUsers.length,
-            totalCount: eventData.participants.length,
-        });
-    } catch (error) {
-        console.error('Checkin history error:', error);
-        res.status(500).json({ message: '이력 조회 중 오류가 발생했습니다.' });
-    }
-});
-
-// 참가자 정보 수정 (메모, 체크인 상태 등)
-router.put('/participants/:participantId', async (req, res) => {
-    const { participantId } = req.params;
-    const { memo, checked_in_status, checkedOutAt, checkedOutMemo } = req.body;
-
-    if (!participantId) {
-        return res.status(400).json({ message: '참가자 ID가 필요합니다.' });
-    }
-
-    const doc = await db.collection('participants_checkin').doc(participantId).get();
-
-    if (!doc.exists) {
-        return res.status(404).json({ message: '참가자를 찾을 수 없습니다.' });
-    }
-
-    const updateData = { updatedAt: new Date() };
-    const currentData = doc.data();
-
-    if (memo !== undefined) {
-        updateData.memo = memo;
-    }
-
-    if (checked_in_status !== undefined) {
-        updateData.checked_in_status = checked_in_status;
-        if (checked_in_status && !currentData.checked_in_status) {
-            updateData.checkedInAt = new Date();
-        } else if (!checked_in_status && currentData.checked_in_status) {
-            updateData.checkedInAt = null;
-        }
-    }
-
-    if (checkedOutMemo !== undefined) {
-        updateData.checkedOutMemo = checkedOutMemo;
-        // 체크아웃 메모를 작성하면 현재 시간으로 체크아웃 처리
-        if (checkedOutMemo && !currentData.checkedOutAt) {
-            updateData.checkedOutAt = new Date();
-        }
-    }
-
-    if (checkedOutAt !== undefined) {
-        updateData.checkedOutAt = checkedOutAt ? new Date(checkedOutAt) : null;
-    }
-
-    await db.collection('participants_checkin').doc(participantId).update(updateData);
-
-    res.json({ success: true, participantId });
-});
 
 // ============ 새로운 통합 API 엔드포인트 ============
 
 // 모든 멤버 목록 조회 (최적화)
 // POST /api/members - 멤버 추가
-router.post('/members', verifyPassword, async (req, res) => {
+router.post('/members', verifyMasterPassword, async (req, res) => {
     const { phoneKey, name, phoneNumber, part, school, schoolName, types, type, position, gen, _collection, collection } = req.body;
 
     if (!phoneKey || !name || !phoneNumber || !part) {
@@ -629,8 +409,8 @@ router.post('/members', verifyPassword, async (req, res) => {
     }
 });
 
-// GET /api/members - 멤버 목록 조회 (member_database만)
-router.get('/members', verifyPassword, async (req, res) => {
+// GET /api/members - 정회원 목록 조회
+router.get('/members', verifyMasterPassword, async (req, res) => {
     try {
         const snapshot = await db.collection('participants_member').get();
         const members = snapshot.docs.map(doc => ({
@@ -648,7 +428,7 @@ router.get('/members', verifyPassword, async (req, res) => {
 });
 
 // GET /api/admin-members - 관리자 멤버 목록 조회
-router.get('/admin-members', verifyPassword, async (req, res) => {
+router.get('/admin-members', verifyMasterPassword, async (req, res) => {
     try {
         const snapshot = await db.collection('participants_admin').get();
         const members = snapshot.docs.map(doc => ({
@@ -666,7 +446,7 @@ router.get('/admin-members', verifyPassword, async (req, res) => {
 });
 
 // GET /api/others-members - 외부 멤버 목록 조회
-router.get('/others-members', verifyPassword, async (req, res) => {
+router.get('/others-members', verifyMasterPassword, async (req, res) => {
     try {
         const snapshot = await db.collection('participants_others').get();
         const members = snapshot.docs.map(doc => ({
@@ -684,7 +464,7 @@ router.get('/others-members', verifyPassword, async (req, res) => {
 });
 
 // 특정 멤버 상세정보 (타입, 체크인 상태 포함)
-router.get('/members/:phoneKey', async (req, res) => {
+router.get('/members/:phoneKey', verifyMasterPassword, async (req, res) => {
     const { phoneKey } = req.params;
 
     try {
@@ -717,7 +497,7 @@ router.get('/members/:phoneKey', async (req, res) => {
 });
 
 // 멤버 정보 수정 (타입 변경 포함)
-router.patch('/members/:phoneKey', verifyPassword, async (req, res) => {
+router.patch('/members/:phoneKey', verifyMasterPassword, async (req, res) => {
     const { phoneKey } = req.params;
     const { type, ...otherData } = req.body;
 
@@ -749,7 +529,7 @@ router.patch('/members/:phoneKey', verifyPassword, async (req, res) => {
 });
 
 // PATCH /api/admin-members/:phoneKey - 운영진 멤버 정보 수정
-router.patch('/admin-members/:phoneKey', verifyPassword, async (req, res) => {
+router.patch('/admin-members/:phoneKey', verifyMasterPassword, async (req, res) => {
     const { phoneKey } = req.params;
     const { type, ...otherData } = req.body;
 
@@ -780,7 +560,7 @@ router.patch('/admin-members/:phoneKey', verifyPassword, async (req, res) => {
 });
 
 // PATCH /api/others-members/:phoneKey - 외부 멤버 정보 수정
-router.patch('/others-members/:phoneKey', verifyPassword, async (req, res) => {
+router.patch('/others-members/:phoneKey', verifyMasterPassword, async (req, res) => {
     const { phoneKey } = req.params;
     const { type, ...otherData } = req.body;
 
@@ -811,7 +591,7 @@ router.patch('/others-members/:phoneKey', verifyPassword, async (req, res) => {
 });
 
 // PATCH /api/members/:phoneKey/memo - 멤버 메모 수정 (이벤트와 무관하게 멤버 DB에 저장)
-router.patch('/members/:phoneKey/memo', verifyPassword, async (req, res) => {
+router.patch('/members/:phoneKey/memo', verifyMasterPassword, async (req, res) => {
     try {
         const { phoneKey } = req.params;
         const { memo } = req.body;
@@ -845,7 +625,7 @@ router.patch('/members/:phoneKey/memo', verifyPassword, async (req, res) => {
 });
 
 // DELETE /api/members/:phoneKey - 정회원 삭제
-router.delete('/members/:phoneKey', verifyPassword, async (req, res) => {
+router.delete('/members/:phoneKey', verifyMasterPassword, async (req, res) => {
     const { phoneKey } = req.params;
 
     try {
@@ -858,7 +638,7 @@ router.delete('/members/:phoneKey', verifyPassword, async (req, res) => {
 });
 
 // DELETE /api/admin-members/:phoneKey - 운영진 삭제
-router.delete('/admin-members/:phoneKey', verifyPassword, async (req, res) => {
+router.delete('/admin-members/:phoneKey', verifyMasterPassword, async (req, res) => {
     const { phoneKey } = req.params;
 
     try {
@@ -871,7 +651,7 @@ router.delete('/admin-members/:phoneKey', verifyPassword, async (req, res) => {
 });
 
 // DELETE /api/others-members/:phoneKey - 외부 참가자 삭제
-router.delete('/others-members/:phoneKey', verifyPassword, async (req, res) => {
+router.delete('/others-members/:phoneKey', verifyMasterPassword, async (req, res) => {
     const { phoneKey } = req.params;
 
     try {
@@ -884,7 +664,7 @@ router.delete('/others-members/:phoneKey', verifyPassword, async (req, res) => {
 });
 
 // 대시보드 통계
-router.get('/dashboard/stats', verifyPassword, async (req, res) => {
+router.get('/dashboard/stats', verifyMasterPassword, async (req, res) => {
     try {
         const today = new Date().toISOString().split('T')[0];
 
@@ -934,7 +714,7 @@ router.get('/dashboard/stats', verifyPassword, async (req, res) => {
 });
 
 // 실시간 체크인 현황
-router.get('/realtime/checkin', verifyPassword, async (req, res) => {
+router.get('/realtime/checkin', verifyMasterPassword, async (req, res) => {
     try {
         const date = req.query.date || new Date().toISOString().split('T')[0];
 
@@ -1052,7 +832,7 @@ router.get('/realtime/checkin', verifyPassword, async (req, res) => {
 // ============ 관리자 페이지 이벤트 관리 API ============
 
 // GET /api/events - 모든 이벤트 목록 (최신순)
-router.get('/events', verifyPassword, async (req, res) => {
+router.get('/events', verifyMasterPassword, async (req, res) => {
     try {
         const snapshot = await db.collection('events').orderBy('date', 'desc').get();
         const events = [];
@@ -1079,7 +859,7 @@ router.get('/events', verifyPassword, async (req, res) => {
 });
 
 // GET /api/events/:date - 특정 이벤트 상세
-router.get('/events/:date', verifyPassword, async (req, res) => {
+router.get('/events/:date', verifyMasterPassword, async (req, res) => {
     try {
         const eventDoc = await db.collection('events').doc(req.params.date).get();
         if (!eventDoc.exists) {
@@ -1087,38 +867,78 @@ router.get('/events/:date', verifyPassword, async (req, res) => {
         }
 
         const eventData = eventDoc.data();
-        const checkInSnapshot = await db.collection(`checkIn_${req.params.date}`).get();
+        const [checkInMemoSnapshot, checkInSnapshot, membersData] = await Promise.all([
+            db.collection(`checkInMemo_${req.params.date}`).get(),
+            db.collection(`checkIn_${req.params.date}`).get(),
+            getAllMembers(),
+        ]);
+
+        const checkInMemoMap = {};
+        for (const doc of checkInMemoSnapshot.docs) {
+            checkInMemoMap[doc.id] = doc.data().memo || '';
+        }
+
+        const memberMap = {};
+        membersData.forEach(member => {
+            memberMap[member.phoneKey] = member;
+        });
 
         const checkedInMembers = [];
         const checkedInPhoneKeys = new Set();
 
         checkInSnapshot.forEach(doc => {
+            if (doc.id === '__meta__') return;
+
             const data = doc.data();
+            const member = memberMap[doc.id] || {};
             checkedInPhoneKeys.add(doc.id);
             checkedInMembers.push({
                 phoneKey: doc.id,
                 name: data.name,
+                phoneNumber: data.phone || data.phoneNumber,
                 part: data.part,
+                school: member.school || member.schoolName || '',
+                type: Array.isArray(member.type) ? member.type : (member.type ? [member.type] : ['allMembers']),
                 checkedInAt: formatTimestamp(data.checkedInAt),
-                memo: data.memo || '',
+                userMemo: member.memo || '',
+                checkInMemo: checkInMemoMap[doc.id] || '',
+                isManual: data.isManual || false,
             });
         });
 
         const notCheckedInMembers = [];
         for (const phoneKey of eventData.participants || []) {
-            if (!checkedInPhoneKeys.has(phoneKey)) {
-                const memberDoc = await db.collection('member_database').doc(phoneKey).get();
-                if (memberDoc.exists) {
-                    notCheckedInMembers.push({
-                        phoneKey,
-                        name: memberDoc.data().name,
-                        part: memberDoc.data().part,
-                    });
-                }
-            }
+            if (checkedInPhoneKeys.has(phoneKey)) continue;
+
+            const member = memberMap[phoneKey];
+            if (!member) continue;
+
+            notCheckedInMembers.push({
+                phoneKey,
+                name: member.name,
+                phoneNumber: member.phone || member.phoneNumber,
+                part: member.part,
+                school: member.school || member.schoolName || '',
+                type: Array.isArray(member.type) ? member.type : (member.type ? [member.type] : ['allMembers']),
+                userMemo: member.memo || '',
+                checkInMemo: checkInMemoMap[phoneKey] || '',
+            });
         }
 
-        res.json({ success: true, event: eventData, checkedInMembers, notCheckedInMembers });
+        res.json({
+            success: true,
+            data: {
+                event: eventData,
+                checkedIn: checkedInMembers,
+                notCheckedIn: notCheckedInMembers,
+                stats: {
+                    totalParticipants: eventData.participants?.length || 0,
+                    checkedInCount: checkedInMembers.length,
+                    notCheckedInCount: notCheckedInMembers.length,
+                    percentage: Math.round((checkedInMembers.length / (eventData.participants?.length || 1)) * 100),
+                },
+            },
+        });
     } catch (error) {
         console.error('Get event detail error:', error);
         res.status(500).json({ message: '이벤트 상세 조회 중 오류가 발생했습니다.' });
@@ -1126,7 +946,7 @@ router.get('/events/:date', verifyPassword, async (req, res) => {
 });
 
 // PATCH /api/events/:date - 이벤트 수정
-router.patch('/events/:date', verifyPassword, async (req, res) => {
+router.patch('/events/:date', verifyMasterPassword, async (req, res) => {
     try {
         const { eventName, eventType } = req.body;
         const updateData = { updatedAt: new Date() };
@@ -1135,12 +955,15 @@ router.patch('/events/:date', verifyPassword, async (req, res) => {
 
         // eventType 변경 시 participants 재계산
         if (eventType) {
-            const snapshot = await db.collection('member_database').get();
+            const members = await getAllMembers();
             const newParticipants = [];
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if (data.types && (data.types.includes(eventType) || eventType === 'allMembers')) {
-                    newParticipants.push(doc.id);
+            members.forEach(member => {
+                const memberTypes = Array.isArray(member.type)
+                    ? member.type
+                    : (member.type ? [member.type] : ['allMembers']);
+
+                if (eventType === 'allMembers' || memberTypes.includes(eventType)) {
+                    newParticipants.push(member.phoneKey);
                 }
             });
             updateData.eventType = eventType;
@@ -1156,7 +979,7 @@ router.patch('/events/:date', verifyPassword, async (req, res) => {
 });
 
 // DELETE /api/events/:date - 이벤트 삭제 (체크인 데이터도 삭제)
-router.delete('/events/:date', verifyPassword, async (req, res) => {
+router.delete('/events/:date', verifyMasterPassword, async (req, res) => {
     try {
         const checkInSnapshot = await db.collection(`checkIn_${req.params.date}`).get();
         const batch = db.batch();
@@ -1173,7 +996,7 @@ router.delete('/events/:date', verifyPassword, async (req, res) => {
 });
 
 // POST /api/checkin/manual - 수동 체크인
-router.post('/checkin/manual', verifyPassword, async (req, res) => {
+router.post('/checkin/manual', verifyMasterPassword, async (req, res) => {
     try {
         const { phoneKey, date } = req.body;
 
@@ -1230,7 +1053,7 @@ router.post('/checkin/manual', verifyPassword, async (req, res) => {
 });
 
 // DELETE /api/checkin/:date/:phoneKey - 체크인 취소 (문서 삭제)
-router.delete('/checkin/:date/:phoneKey', verifyPassword, async (req, res) => {
+router.delete('/checkin/:date/:phoneKey', verifyMasterPassword, async (req, res) => {
     try {
         await db.collection(`checkIn_${req.params.date}`).doc(req.params.phoneKey).delete();
         res.json({ success: true });
@@ -1242,7 +1065,7 @@ router.delete('/checkin/:date/:phoneKey', verifyPassword, async (req, res) => {
 
 // PATCH /api/checkin/:date/:phoneKey/memo - 메모 수정
 // body: { memo, type: "checkin" | "user" }
-router.patch('/checkin/:date/:phoneKey/memo', verifyPassword, async (req, res) => {
+router.patch('/checkin/:date/:phoneKey/memo', verifyMasterPassword, async (req, res) => {
     try {
         const { memo, type = 'checkin' } = req.body;
         const { phoneKey, date } = req.params;
